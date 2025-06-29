@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: social-commerce-staging-service
+  namespace: social-commerce
+  labels:
+    app: social-commerce-staging
+    domain: social-commerce
+spec:
+  selector:
+    app: social-commerce-staging
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP

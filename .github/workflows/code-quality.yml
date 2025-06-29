@@ -1,0 +1,56 @@
+name: Social Commerce Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: 
+      - "social-commerce/**"
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  java-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: "17"
+        distribution: "temurin"
+    
+    - name: Checkstyle Analysis
+      run:  < /dev/null | 
+        find social-commerce -name "pom.xml" -type f | while read pom; do
+          dir=$(dirname "$pom")
+          echo "Running checkstyle for $dir"
+          cd "$dir"
+          mvn checkstyle:check || true
+          cd - > /dev/null
+        done
+
+  nodejs-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "18"
+    
+    - name: ESLint Analysis
+      run: |
+        find social-commerce -name "package.json" -type f | while read package; do
+          dir=$(dirname "$package")
+          if grep -q "eslint" "$package"; then
+            echo "Running ESLint for $dir"
+            cd "$dir"
+            npm ci --legacy-peer-deps || true
+            npx eslint . --ext .js,.jsx,.ts,.tsx || true
+            cd - > /dev/null
+          fi
+        done

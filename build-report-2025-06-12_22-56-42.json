@@ -1,0 +1,112 @@
+﻿[
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "admin-finalization"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "admin-interfaces"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "analytics-service"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "api-gateway"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "commission-service"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "fulfillment-options"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "integration-optimization"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "integration-performance"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "invoice-service"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "localization-service"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "marketplace"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "multi-currency-service"
+    },
+    {
+        "Status":  "FAILED",
+        "Message":  "See C:\\Users\\frich\\Desktop\\Exalt-Application-Limited\\Exalt-Application-Limited\\social-ecommerce-ecosystem\\social-commerce\\order-service\\build-error-new.log",
+        "Service":  "order-service"
+    },
+    {
+        "Status":  "FAILED",
+        "Message":  "See C:\\Users\\frich\\Desktop\\Exalt-Application-Limited\\Exalt-Application-Limited\\social-ecommerce-ecosystem\\social-commerce\\payment-gateway\\build-error-new.log",
+        "Service":  "payment-gateway"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "payout-service"
+    },
+    {
+        "Status":  "FAILED",
+        "Message":  "See C:\\Users\\frich\\Desktop\\Exalt-Application-Limited\\Exalt-Application-Limited\\social-ecommerce-ecosystem\\social-commerce\\product-service\\build-error-new.log",
+        "Service":  "product-service"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "regional-admin"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "social-commerce-production"
+    },
+    {
+        "Status":  "FAILED",
+        "Message":  "See C:\\Users\\frich\\Desktop\\Exalt-Application-Limited\\Exalt-Application-Limited\\social-ecommerce-ecosystem\\social-commerce\\social-commerce-shared\\build-error-new.log",
+        "Service":  "social-commerce-shared"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "social-commerce-staging"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "subscription-service"
+    },
+    {
+        "Status":  "SUCCESS",
+        "Message":  "Compiled successfully",
+        "Service":  "vendor-onboarding"
+    }
+]

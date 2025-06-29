@@ -1,0 +1,312 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: social-commerce-prometheus
+  namespace: social-commerce
+spec:
+  serviceAccountName: prometheus
+  podMonitorSelector:
+    matchLabels:
+      team: social-commerce
+  serviceMonitorSelector:
+    matchLabels:
+      team: social-commerce
+  ruleSelector:
+    matchLabels:
+      team: social-commerce
+  resources:
+    requests:
+      memory: 2Gi
+      cpu: 1000m
+    limits:
+      memory: 4Gi
+      cpu: 2000m
+  retention: 30d
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: "fast-ssd"
+        resources:
+          requests:
+            storage: 50Gi
+  alerting:
+    alertmanagers:
+    - namespace: social-commerce
+      name: alertmanager
+      port: web
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  name: alertmanager
+  namespace: social-commerce
+spec:
+  replicas: 3
+  configSecret: alertmanager-config
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: "fast-ssd"
+        resources:
+          requests:
+            storage: 10Gi
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-config
+  namespace: social-commerce
+stringData:
+  alertmanager.yaml: |
+    global:
+      resolve_timeout: 5m
+      slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'default'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'critical-alerts'
+      - match:
+          severity: warning
+        receiver: 'warning-alerts'
+      - match:
+          service: payment-service
+        receiver: 'payment-alerts'
+      - match:
+          service: order-service
+        receiver: 'order-alerts'
+    
+    receivers:
+    - name: 'default'
+      slack_configs:
+      - channel: '#social-commerce-alerts'
+        send_resolved: true
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}: {{ .Annotations.description }}{{ end }}'
+    
+    - name: 'critical-alerts'
+      slack_configs:
+      - channel: '#social-commerce-critical'
+        send_resolved: true
+        text: '<!here> CRITICAL: {{ range .Alerts }}{{ .Annotations.summary }}: {{ .Annotations.description }}{{ end }}'
+      pagerduty_configs:
+      - routing_key: 'YOUR_PAGERDUTY_INTEGRATION_KEY'
+        description: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+    
+    - name: 'warning-alerts'
+      slack_configs:
+      - channel: '#social-commerce-warnings'
+        send_resolved: true
+        text: 'WARNING: {{ range .Alerts }}{{ .Annotations.summary }}: {{ .Annotations.description }}{{ end }}'
+    
+    - name: 'payment-alerts'
+      slack_configs:
+      - channel: '#payment-team'
+        send_resolved: true
+      email_configs:
+      - to: 'payment-team@company.com'
+        from: 'alerts@company.com'
+        smarthost: 'smtp.company.com:587'
+        auth_username: 'alerts@company.com'
+        auth_password: 'password'
+    
+    - name: 'order-alerts'
+      slack_configs:
+      - channel: '#order-team'
+        send_resolved: true
+    
+    inhibit_rules:
+    - source_match:
+        severity: 'critical'
+      target_match:
+        severity: 'warning'
+      equal: ['alertname', 'cluster', 'service']
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: social-commerce-rules
+  namespace: social-commerce
+  labels:
+    team: social-commerce
+spec:
+  groups:
+  - name: social-commerce.rules
+    interval: 30s
+    rules:
+    # Service availability alerts
+    - alert: ServiceDown
+      expr: up{job=~"order-service|payment-service|product-service"} == 0
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Service {{ $labels.instance }} is down"
+        description: "{{ $labels.job }} on {{ $labels.instance }} has been down for more than 2 minutes."
+    
+    # API latency alerts
+    - alert: HighApiLatency
+      expr: histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{job=~".+-service"}[5m])) > 2
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High API latency on {{ $labels.job }}"
+        description: "99th percentile latency is {{ $value }}s for {{ $labels.uri }}"
+    
+    # Payment processing alerts
+    - alert: PaymentFailureRate
+      expr: rate(payment_failed_total[5m]) / rate(payment_attempts_total[5m]) > 0.1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High payment failure rate"
+        description: "Payment failure rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+    
+    # Order processing alerts
+    - alert: OrderProcessingBacklog
+      expr: order_queue_size > 1000
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Order processing backlog"
+        description: "Order queue has {{ $value }} pending orders"
+    
+    # Database connection alerts
+    - alert: DatabaseConnectionPool
+      expr: hikaricp_connections_active > hikaricp_connections_max * 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Database connection pool nearly exhausted"
+        description: "Database connection pool utilization is {{ $value | humanizePercentage }}"
+    
+    # Kafka consumer lag
+    - alert: KafkaConsumerLag
+      expr: kafka_consumer_lag > 10000
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High Kafka consumer lag"
+        description: "Consumer {{ $labels.consumer_group }} lag is {{ $value }} messages"
+    
+    # Memory usage alerts
+    - alert: HighMemoryUsage
+      expr: process_memory_rss_bytes / container_spec_memory_limit_bytes > 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage on {{ $labels.pod }}"
+        description: "Memory usage is {{ $value | humanizePercentage }} of the limit"
+    
+    # Circuit breaker open
+    - alert: CircuitBreakerOpen
+      expr: circuitbreaker_state{state="OPEN"} == 1
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Circuit breaker open for {{ $labels.name }}"
+        description: "Circuit breaker {{ $labels.name }} has been open for more than 1 minute"
+    
+    # Business metrics alerts
+    - alert: LowOrderConversion
+      expr: rate(orders_completed_total[1h]) / rate(orders_created_total[1h]) < 0.7
+      for: 30m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Low order conversion rate"
+        description: "Order conversion rate is {{ $value | humanizePercentage }} over the last hour"
+    
+    - alert: InventoryDepletion
+      expr: product_stock_level < product_stock_threshold
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Low inventory for product {{ $labels.product_id }}"
+        description: "Product {{ $labels.product_id }} has {{ $value }} items remaining"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: social-commerce
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs: ["get", "list", "watch"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus
+  namespace: social-commerce
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: social-commerce
+spec:
+  selector:
+    prometheus: social-commerce-prometheus
+  ports:
+    - port: 80
+      targetPort: 9090
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: social-commerce
+spec:
+  selector:
+    alertmanager: alertmanager
+  ports:
+    - port: 80
+      targetPort: 9093
+  type: ClusterIP

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: subscription-service-service
+  namespace: social-commerce
+  labels:
+    app: subscription-service
+    domain: social-commerce
+spec:
+  selector:
+    app: subscription-service
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP

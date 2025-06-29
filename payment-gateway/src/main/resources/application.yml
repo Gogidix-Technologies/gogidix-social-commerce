@@ -1,0 +1,208 @@
+spring:
+  application:
+    name: payment-gateway
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payment_gateway_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: false
+
+server:
+  port: 8086
+
+# Eureka Client Configuration
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    preferIpAddress: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# Management and Monitoring - SECURITY HARDENED
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics"
+      base-path: "/actuator"
+  endpoint:
+    health:
+      show-details: when-authorized
+      roles: "PLATFORM_ADMIN,SUPER_ADMIN"
+    metrics:
+      enabled: true
+    info:
+      enabled: true
+  info:
+    env:
+      enabled: false
+  security:
+    enabled: true
+
+# Security Configuration
+spring.security:
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: http://localhost:8084/auth
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# Application Information
+info:
+  app:
+    name: Payment Gateway
+    description: Multi-payment processing gateway for social commerce
+    version: 1.0.0
+    environment: development
+
+# Logging Configuration - SECURITY HARDENED
+logging:
+  level:
+    com.exalt.ecosystem.socialcommerce.paymentgateway: INFO
+    com.exalt.ecosystem.socialcommerce.paymentgateway.security: WARN
+    org.springframework.cloud: WARN
+    org.springframework.security: WARN
+    io.github.resilience4j: INFO
+    org.springframework.web.filter.CommonsRequestLoggingFilter: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: "logs/payment-gateway.log"
+    max-size: "10MB"
+    max-history: 30
+
+# Payment Gateway Configuration
+payment:
+  gateway:
+    default-currency: USD
+    supported-currencies:
+      - USD
+      - EUR
+      - GBP
+      - CAD
+    transaction-timeout: 30000
+    max-retry-attempts: 3
+    
+# Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      payment-processor:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+      refund-processor:
+        slidingWindowSize: 5
+        failureRateThreshold: 60
+        waitDurationInOpenState: 60s
+
+# Payment Configuration - SECURITY IMPLEMENTATION
+payment:
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY:#{null}}  # MUST be set in environment
+    publishable-key: ${STRIPE_PUBLISHABLE_KEY:#{null}}  # MUST be set in environment
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:#{null}}  # MUST be set in environment
+    api-version: ${STRIPE_API_VERSION:2023-10-16}
+    base-url: ${STRIPE_BASE_URL:https://api.stripe.com}
+    region: "EUROPE_REST_OF_WORLD"
+  
+  paystack:
+    secret-key: ${PAYSTACK_SECRET_KEY:#{null}}  # MUST be set in environment
+    public-key: ${PAYSTACK_PUBLIC_KEY:#{null}}  # MUST be set in environment
+    webhook-secret: ${PAYSTACK_WEBHOOK_SECRET:#{null}}  # MUST be set in environment
+    base-url: ${PAYSTACK_BASE_URL:https://api.paystack.co}
+    region: "AFRICA"
+  
+  security:
+    pci-compliance-mode: ${PCI_COMPLIANCE_MODE:true}
+    tokenization-required: ${TOKENIZATION_REQUIRED:true}
+    max-amount-per-transaction: ${MAX_AMOUNT_PER_TRANSACTION:10000.00}
+    webhook-signature-validation: ${WEBHOOK_SIGNATURE_VALIDATION:true}
+    
+  # Disabled until implementation
+  paypal:
+    enabled: false
+    client-id: ${PAYPAL_CLIENT_ID:#{null}}
+    client-secret: ${PAYPAL_CLIENT_SECRET:#{null}}
+    base-url: ${PAYPAL_BASE_URL:https://api.paypal.com}
+    
+  square:
+    enabled: false
+    application-id: ${SQUARE_APPLICATION_ID:#{null}}
+    access-token: ${SQUARE_ACCESS_TOKEN:#{null}}
+    environment: ${SQUARE_ENVIRONMENT:production}
+
+# Security Settings - SECURITY IMPLEMENTATION
+security:
+  encryption:
+    algorithm: AES
+    key-size: 256
+  
+  fraud-detection:
+    enabled: true
+    max-amount-per-transaction: 10000.00
+    max-transactions-per-hour: 50
+    suspicious-countries:
+      - XX
+      - YY
+
+# CORS Configuration - SECURITY IMPLEMENTATION
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:3002}
+    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS:Content-Type,Authorization,X-Signature}
+    allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+    max-age: ${CORS_MAX_AGE:3600}
+
+# Integration Configuration
+integration:
+  order-service:
+    base-url: http://localhost:8084
+    timeout: 10000
+    
+  commission-service:
+    base-url: http://localhost:8100
+    timeout: 5000
+    
+  notification-service:
+    base-url: http://localhost:8090
+    timeout: 3000
+
+# Feature Flags
+features:
+  recurring-payments: true
+  multi-currency: true
+  fraud-detection: true
+  analytics: true
+  refund-automation: false

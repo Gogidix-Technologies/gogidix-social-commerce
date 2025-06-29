@@ -1,0 +1,369 @@
+spring:
+  application:
+    name: social-commerce-ecosystem
+  
+  # Database configuration with connection pooling
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:social_commerce}
+    username: ${DB_USERNAME:social_commerce}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      validation-timeout: 5000
+      auto-commit: true
+      pool-name: SocialCommerceHikariCP
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+  
+  # JPA/Hibernate configuration
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 25
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+        javax:
+          cache:
+            provider: org.ehcache.jsr107.EhcacheCachingProvider
+        generate_statistics: true
+        session:
+          events:
+            log:
+              LOG_QUERIES_SLOWER_THAN_MS: 100
+  
+  # Redis configuration
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 2
+        max-wait: -1ms
+  
+  # Cache configuration
+  cache:
+    type: redis
+    redis:
+      cache-null-values: false
+      time-to-live: 900000  # 15 minutes
+  
+  # Kafka configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: "1"
+      batch-size: 16384
+      linger-ms: 10
+      buffer-memory: 33554432
+      compression-type: snappy
+      retries: 3
+      enable-idempotence: true
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      group-id: ${KAFKA_CONSUMER_GROUP:social-commerce-group}
+      auto-offset-reset: earliest
+      max-poll-records: 100
+      max-poll-interval-ms: 300000
+      fetch-max-bytes: 52428800
+      fetch-max-wait: 500
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.value.default.type: com.socialecommerceecosystem.shared.event.DomainEvent
+        spring.json.type.mapping: |
+          OrderPlacedEvent:com.socialecommerceecosystem.shared.event.OrderPlacedEvent,
+          PaymentCompletedEvent:com.socialecommerceecosystem.shared.event.PaymentCompletedEvent,
+          ProductStockUpdatedEvent:com.socialecommerceecosystem.shared.event.ProductStockUpdatedEvent,
+          CommissionCalculatedEvent:com.socialecommerceecosystem.shared.event.CommissionCalculatedEvent
+  
+  # Web configuration
+  webflux:
+    base-path: /api
+  
+  # Actuator configuration
+  actuator:
+    health:
+      circuitbreakers:
+        enabled: true
+      diskspace:
+        enabled: true
+        threshold: 10MB
+    metrics:
+      export:
+        prometheus:
+          enabled: true
+      tags:
+        application: ${spring.application.name}
+        environment: production
+  
+  # Security configuration
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: openid,profile,email
+          facebook:
+            client-id: ${FACEBOOK_CLIENT_ID}
+            client-secret: ${FACEBOOK_CLIENT_SECRET}
+            scope: email,public_profile
+
+# Resilience4j configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      payment-service:
+        register-health-indicator: true
+        sliding-window-size: 50
+        minimum-number-of-calls: 10
+        permitted-number-of-calls-in-half-open-state: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 60s
+        failure-rate-threshold: 30
+        event-consumer-buffer-size: 10
+      order-service:
+        register-health-indicator: true
+        sliding-window-size: 75
+        minimum-number-of-calls: 10
+        permitted-number-of-calls-in-half-open-state: 8
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 45s
+        failure-rate-threshold: 40
+      social-media-service:
+        register-health-indicator: true
+        sliding-window-size: 100
+        minimum-number-of-calls: 10
+        permitted-number-of-calls-in-half-open-state: 15
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 20s
+        failure-rate-threshold: 70
+  
+  retry:
+    instances:
+      payment-service:
+        max-attempts: 5
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 1.5
+        retry-exceptions:
+          - java.lang.RuntimeException
+      default:
+        max-attempts: 3
+        wait-duration: 1000ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+  
+  bulkhead:
+    instances:
+      payment-service:
+        max-concurrent-calls: 5
+        max-wait-duration: 50ms
+      default:
+        max-concurrent-calls: 10
+        max-wait-duration: 100ms
+  
+  time-limiter:
+    instances:
+      payment-service:
+        timeout-duration: 10s
+      external-api:
+        timeout-duration: 3s
+      default:
+        timeout-duration: 5s
+
+# API rate limiting
+api:
+  rate-limit:
+    enabled: true
+    default-limit: 100
+    period: 60s
+    endpoints:
+      "/api/payments/**": 50
+      "/api/orders/**": 200
+      "/api/products/search": 1000
+
+# Logging configuration
+logging:
+  level:
+    com.socialecommerceecosystem: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.springframework.cloud.gateway: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    io.github.resilience4j: INFO
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/social-commerce.log
+    max-size: 10MB
+    max-history: 30
+
+# Monitoring endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers,env,configprops,beans,mappings,threaddump,heapdump
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: 10MB
+    redis:
+      enabled: true
+    db:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: production
+
+# Custom application properties
+social-commerce:
+  payment:
+    providers:
+      stripe:
+        api-key: ${STRIPE_API_KEY}
+        webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+      paypal:
+        client-id: ${PAYPAL_CLIENT_ID}
+        client-secret: ${PAYPAL_CLIENT_SECRET}
+        mode: live
+  
+  currency:
+    default-currency: USD
+    supported-currencies:
+      - USD
+      - EUR
+      - GBP
+      - CAD
+      - AUD
+      - JPY
+      - CHF
+      - SEK
+      - NZD
+      - SGD
+    exchange-rate-api:
+      url: ${EXCHANGE_RATE_API_URL}
+      api-key: ${EXCHANGE_RATE_API_KEY}
+      cache-duration: PT24H
+  
+  social-media:
+    platforms:
+      facebook:
+        app-id: ${FACEBOOK_APP_ID}
+        app-secret: ${FACEBOOK_APP_SECRET}
+      instagram:
+        api-key: ${INSTAGRAM_API_KEY}
+      twitter:
+        api-key: ${TWITTER_API_KEY}
+        api-secret: ${TWITTER_API_SECRET}
+  
+  commission:
+    default-rates:
+      vendor: 0.855  # 85.5%
+      platform: 0.10  # 10%
+      influencer: 0.05  # 5%
+    payout:
+      minimum-threshold: 100.00
+      schedule: "0 0 2 * * MON"  # Every Monday at 2 AM
+  
+  analytics:
+    batch-size: 1000
+    flush-interval: 30s
+    retention-days: 90
+    
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: 3600000  # 1 hour
+      refresh-expiration: 86400000  # 24 hours
+    cors:
+      allowed-origins:
+        - https://app.socialcommerce.com
+        - https://admin.socialcommerce.com
+        - https://vendors.socialcommerce.com
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      allowed-headers: "*"
+      exposed-headers:
+        - Authorization
+        - Link
+        - X-Total-Count
+      allow-credentials: true
+      max-age: 3600
+
+# Distributed tracing
+spring.cloud.compatibility-verifier.enabled: false
+management.zipkin:
+  tracing:
+    endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
+management.tracing:
+  sampling:
+    probability: 0.1  # Sample 10% of requests in production
+
+# External service timeouts
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 5000
+        read-timeout: 10000
+      payment-service:
+        connect-timeout: 10000
+        read-timeout: 20000

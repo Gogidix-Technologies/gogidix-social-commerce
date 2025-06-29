@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  # Development overrides
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: socialcommerce_dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev123
+
+  # Service with hot reload
+  analytics-service:
+    volumes:
+      - ./analytics-service/src:/app/src
+      - ./analytics-service/target:/app/target
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+    command: ["java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", "-jar", "app.jar"]
+    ports:
+      - "8081:8080"
+      - "5005:5005"

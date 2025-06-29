@@ -1,0 +1,188 @@
+name: Main CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/socialcommerce
+
+jobs:
+  # Code Quality Check
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+          
+      - name: Run Code Quality Checks
+        run: |
+          echo "Running code quality checks..."
+          # Add SonarQube or other quality tools here
+
+  # Build and Test Services
+  build-test:
+    name: Build and Test - ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: code-quality
+    strategy:
+      matrix:
+        service:
+          - analytics-service
+          - api-gateway
+          - commission-service
+          - marketplace
+          - multi-currency-service
+          - subscription-service
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+          
+      - name: Build and Test ${{ matrix.service }}
+        run: |
+          cd ${{ matrix.service }}
+          mvn clean verify
+          
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ matrix.service }}
+          path: ${{ matrix.service }}/target/surefire-reports/
+          
+      - name: Upload Coverage Reports
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-${{ matrix.service }}
+          path: ${{ matrix.service }}/target/site/jacoco/
+
+  # Security Scan
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Build Docker Images
+  docker-build:
+    name: Docker Build - ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: [build-test, security-scan]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    strategy:
+      matrix:
+        service:
+          - analytics-service
+          - api-gateway
+          - commission-service
+          - marketplace
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        
+      - name: Log in to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+            
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to Development
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.ref == 'refs/heads/develop'
+    environment: development
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Development Environment
+        run: |
+          echo "Deploying to development environment..."
+          # Add actual deployment steps here (kubectl, helm, etc.)
+
+  # Deploy to Production
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Production Environment
+        run: |
+          echo "Deploying to production environment..."
+          # Add actual deployment steps here

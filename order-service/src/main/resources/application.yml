@@ -1,0 +1,77 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:order_service}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  cloud:
+    discovery:
+      enabled: true
+    config:
+      enabled: true
+      uri: http://${CONFIG_SERVER_HOST:localhost}:${CONFIG_SERVER_PORT:8888}
+      fail-fast: true
+      retry:
+        max-attempts: 20
+        max-interval: 10000
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://${AUTH_SERVICE_HOST:localhost}:${AUTH_SERVICE_PORT:8081}/auth/realms/social-commerce
+          jwk-set-uri: http://${AUTH_SERVICE_HOST:localhost}:${AUTH_SERVICE_PORT:8081}/auth/realms/social-commerce/protocol/openid-connect/certs
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://${EUREKA_SERVER_HOST:localhost}:${EUREKA_SERVER_PORT:8761}/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    hostname: ${HOSTNAME:localhost}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+  health:
+    diskspace:
+      enabled: true
+    db:
+      enabled: true
+    defaults:
+      enabled: true
+
+# Product Service URL configuration
+service:
+  product:
+    url: http://${PRODUCT_SERVICE_HOST:localhost}:${PRODUCT_SERVICE_PORT:8082}
+  
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.exalt.ecosystem.socialcommerce.orderservice: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate: INFO

@@ -1,0 +1,738 @@
+openapi: 3.0.3
+info:
+  title: Analytics Service API
+  description: |
+    The Analytics Service provides comprehensive business intelligence and data analytics 
+    for the social commerce domain. It aggregates data from all marketplace activities 
+    including vendor performance, product analytics, order trends, and customer behavior analysis.
+  version: 1.0.0
+  contact:
+    name: Social Commerce Analytics Team
+    email: analytics-team@social-ecommerce.com
+    url: https://docs.social-ecommerce.com/analytics
+  license:
+    name: Proprietary
+    url: https://social-ecommerce.com/license
+servers:
+  - url: http://localhost:8100
+    description: Development server
+  - url: https://analytics-service-staging.social-ecommerce.com
+    description: Staging server
+  - url: https://analytics-service.social-ecommerce.com
+    description: Production server
+
+tags:
+  - name: Dashboard Analytics
+    description: Main dashboard analytics endpoints
+  - name: Vendor Analytics
+    description: Vendor-specific performance analytics
+  - name: Product Analytics
+    description: Product performance and behavior analytics
+  - name: Order Analytics
+    description: Order trends and analysis
+  - name: Customer Analytics
+    description: Customer behavior and insights
+  - name: Reports
+    description: Custom report generation and management
+  - name: Internal
+    description: Internal service integration endpoints
+
+paths:
+  /api/v1/analytics/dashboard:
+    get:
+      tags:
+        - Dashboard Analytics
+      summary: Get main analytics dashboard data
+      description: Retrieves the primary analytics dashboard with key business metrics
+      operationId: getDashboardAnalytics
+      parameters:
+        - name: timeRange
+          in: query
+          description: Time range for analytics data
+          required: false
+          schema:
+            type: string
+            enum: [1d, 7d, 30d, 90d, 1y]
+            default: 30d
+        - name: region
+          in: query
+          description: Regional filter for analytics
+          required: false
+          schema:
+            type: string
+            example: "EU"
+      responses:
+        '200':
+          description: Dashboard analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardAnalytics'
+        '400':
+          description: Invalid request parameters
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal server error
+
+  /api/v1/analytics/vendors/{vendorId}:
+    get:
+      tags:
+        - Vendor Analytics
+      summary: Get vendor-specific analytics
+      description: Retrieves detailed analytics for a specific vendor
+      operationId: getVendorAnalytics
+      parameters:
+        - name: vendorId
+          in: path
+          required: true
+          description: Unique identifier for the vendor
+          schema:
+            type: string
+            format: uuid
+        - name: timeRange
+          in: query
+          description: Time range for analytics data
+          required: false
+          schema:
+            type: string
+            enum: [1d, 7d, 30d, 90d, 1y]
+            default: 30d
+      responses:
+        '200':
+          description: Vendor analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorAnalytics'
+        '404':
+          description: Vendor not found
+        '401':
+          description: Unauthorized access
+
+  /api/v1/analytics/products/performance:
+    get:
+      tags:
+        - Product Analytics
+      summary: Get product performance metrics
+      description: Retrieves product performance analytics across the marketplace
+      operationId: getProductPerformance
+      parameters:
+        - name: category
+          in: query
+          description: Filter by product category
+          required: false
+          schema:
+            type: string
+        - name: vendorId
+          in: query
+          description: Filter by vendor
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: timeRange
+          in: query
+          description: Time range for analytics data
+          required: false
+          schema:
+            type: string
+            enum: [1d, 7d, 30d, 90d, 1y]
+            default: 30d
+        - name: limit
+          in: query
+          description: Maximum number of products to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Product performance analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPerformanceAnalytics'
+
+  /api/v1/analytics/orders/trends:
+    get:
+      tags:
+        - Order Analytics
+      summary: Get order trend analysis
+      description: Retrieves order trend analytics and patterns
+      operationId: getOrderTrends
+      parameters:
+        - name: timeRange
+          in: query
+          description: Time range for trend analysis
+          required: false
+          schema:
+            type: string
+            enum: [1d, 7d, 30d, 90d, 1y]
+            default: 30d
+        - name: granularity
+          in: query
+          description: Data granularity for trends
+          required: false
+          schema:
+            type: string
+            enum: [hour, day, week, month]
+            default: day
+      responses:
+        '200':
+          description: Order trend analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderTrendAnalytics'
+
+  /api/v1/analytics/customers/behavior:
+    get:
+      tags:
+        - Customer Analytics
+      summary: Get customer behavior insights
+      description: Retrieves customer behavior analytics and patterns
+      operationId: getCustomerBehavior
+      parameters:
+        - name: segment
+          in: query
+          description: Customer segment filter
+          required: false
+          schema:
+            type: string
+            enum: [new, returning, premium, inactive]
+        - name: timeRange
+          in: query
+          description: Time range for behavior analysis
+          required: false
+          schema:
+            type: string
+            enum: [1d, 7d, 30d, 90d, 1y]
+            default: 30d
+      responses:
+        '200':
+          description: Customer behavior analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerBehaviorAnalytics'
+
+  /api/v1/analytics/reports/generate:
+    post:
+      tags:
+        - Reports
+      summary: Generate custom analytics report
+      description: Initiates generation of a custom analytics report
+      operationId: generateReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportGenerationRequest'
+      responses:
+        '202':
+          description: Report generation started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportGenerationResponse'
+        '400':
+          description: Invalid report request
+        '401':
+          description: Unauthorized access
+
+  /api/v1/analytics/reports/{reportId}:
+    get:
+      tags:
+        - Reports
+      summary: Retrieve generated report
+      description: Retrieves a previously generated analytics report
+      operationId: getReport
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          description: Unique identifier for the report
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Generated report data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsReport'
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Report not found
+        '202':
+          description: Report still generating
+
+  /internal/analytics/events:
+    post:
+      tags:
+        - Internal
+      summary: Process business events
+      description: Internal endpoint for processing business events from other services
+      operationId: processEvents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessEventBatch'
+      responses:
+        '202':
+          description: Events accepted for processing
+        '400':
+          description: Invalid event data
+
+  /internal/analytics/metrics/{serviceId}:
+    get:
+      tags:
+        - Internal
+      summary: Get service-specific metrics
+      description: Internal endpoint for retrieving service-specific analytics metrics
+      operationId: getServiceMetrics
+      parameters:
+        - name: serviceId
+          in: path
+          required: true
+          description: Service identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Service-specific metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMetrics'
+
+components:
+  schemas:
+    DashboardAnalytics:
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/SummaryMetrics'
+        orderTrends:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrendDataPoint'
+        topProducts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductMetric'
+        topVendors:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorMetric'
+        revenueMetrics:
+          $ref: '#/components/schemas/RevenueMetrics'
+        customerMetrics:
+          $ref: '#/components/schemas/CustomerMetrics'
+
+    SummaryMetrics:
+      type: object
+      properties:
+        totalOrders:
+          type: integer
+          example: 1250
+        totalRevenue:
+          type: number
+          format: decimal
+          example: 45000.50
+        totalCustomers:
+          type: integer
+          example: 850
+        totalVendors:
+          type: integer
+          example: 125
+        averageOrderValue:
+          type: number
+          format: decimal
+          example: 36.00
+        conversionRate:
+          type: number
+          format: decimal
+          example: 3.5
+
+    VendorAnalytics:
+      type: object
+      properties:
+        vendorId:
+          type: string
+          format: uuid
+        vendorName:
+          type: string
+          example: "TechGadgets Pro"
+        totalOrders:
+          type: integer
+          example: 250
+        totalRevenue:
+          type: number
+          format: decimal
+          example: 8500.00
+        productCount:
+          type: integer
+          example: 45
+        averageRating:
+          type: number
+          format: decimal
+          example: 4.7
+        performanceScore:
+          type: number
+          format: decimal
+          example: 92.5
+        orderTrends:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrendDataPoint'
+        topProducts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductMetric'
+
+    ProductPerformanceAnalytics:
+      type: object
+      properties:
+        totalProducts:
+          type: integer
+          example: 5000
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductAnalytics'
+        categoryBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryMetric'
+
+    ProductAnalytics:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+          example: "Wireless Bluetooth Headphones"
+        category:
+          type: string
+          example: "Electronics"
+        vendorId:
+          type: string
+          format: uuid
+        totalViews:
+          type: integer
+          example: 1200
+        totalOrders:
+          type: integer
+          example: 85
+        revenue:
+          type: number
+          format: decimal
+          example: 2550.00
+        conversionRate:
+          type: number
+          format: decimal
+          example: 7.08
+        averageRating:
+          type: number
+          format: decimal
+          example: 4.5
+
+    OrderTrendAnalytics:
+      type: object
+      properties:
+        timeRange:
+          type: string
+          example: "30d"
+        granularity:
+          type: string
+          example: "day"
+        orderTrends:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrendDataPoint'
+        revenueTrends:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrendDataPoint'
+        seasonalPatterns:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalPattern'
+
+    CustomerBehaviorAnalytics:
+      type: object
+      properties:
+        totalCustomers:
+          type: integer
+          example: 2500
+        newCustomers:
+          type: integer
+          example: 150
+        returningCustomers:
+          type: integer
+          example: 2350
+        customerSegments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerSegment'
+        behaviorPatterns:
+          type: array
+          items:
+            $ref: '#/components/schemas/BehaviorPattern'
+
+    ReportGenerationRequest:
+      type: object
+      required:
+        - reportType
+        - timeRange
+      properties:
+        reportType:
+          type: string
+          enum: [vendor_performance, product_analytics, financial_summary, customer_insights]
+        timeRange:
+          type: string
+          enum: [1d, 7d, 30d, 90d, 1y]
+        filters:
+          type: object
+          additionalProperties: true
+        format:
+          type: string
+          enum: [json, pdf, excel]
+          default: json
+        email:
+          type: string
+          format: email
+          description: Email address to send completed report
+
+    ReportGenerationResponse:
+      type: object
+      properties:
+        reportId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+        estimatedCompletionTime:
+          type: string
+          format: date-time
+        downloadUrl:
+          type: string
+          format: uri
+          description: Available when status is completed
+
+    AnalyticsReport:
+      type: object
+      properties:
+        reportId:
+          type: string
+          format: uuid
+        reportType:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        timeRange:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          properties:
+            totalRecords:
+              type: integer
+            processingTime:
+              type: number
+              format: decimal
+            dataSource:
+              type: string
+
+    BusinessEventBatch:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEvent'
+
+    BusinessEvent:
+      type: object
+      required:
+        - eventType
+        - timestamp
+        - data
+      properties:
+        eventType:
+          type: string
+          enum: [order_completed, product_viewed, vendor_registered, payment_processed]
+        timestamp:
+          type: string
+          format: date-time
+        serviceId:
+          type: string
+        userId:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+
+    ServiceMetrics:
+      type: object
+      properties:
+        serviceId:
+          type: string
+        metrics:
+          type: object
+          additionalProperties:
+            type: number
+
+    TrendDataPoint:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          format: decimal
+        metadata:
+          type: object
+          additionalProperties: true
+
+    ProductMetric:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        metric:
+          type: number
+          format: decimal
+        rank:
+          type: integer
+
+    VendorMetric:
+      type: object
+      properties:
+        vendorId:
+          type: string
+          format: uuid
+        vendorName:
+          type: string
+        metric:
+          type: number
+          format: decimal
+        rank:
+          type: integer
+
+    CategoryMetric:
+      type: object
+      properties:
+        categoryName:
+          type: string
+        productCount:
+          type: integer
+        totalRevenue:
+          type: number
+          format: decimal
+        averageRating:
+          type: number
+          format: decimal
+
+    RevenueMetrics:
+      type: object
+      properties:
+        totalRevenue:
+          type: number
+          format: decimal
+        projectedRevenue:
+          type: number
+          format: decimal
+        growthRate:
+          type: number
+          format: decimal
+        commissionEarned:
+          type: number
+          format: decimal
+
+    CustomerMetrics:
+      type: object
+      properties:
+        totalCustomers:
+          type: integer
+        activeCustomers:
+          type: integer
+        newCustomers:
+          type: integer
+        customerAcquisitionCost:
+          type: number
+          format: decimal
+        customerLifetimeValue:
+          type: number
+          format: decimal
+
+    CustomerSegment:
+      type: object
+      properties:
+        segmentName:
+          type: string
+        customerCount:
+          type: integer
+        averageOrderValue:
+          type: number
+          format: decimal
+        totalRevenue:
+          type: number
+          format: decimal
+
+    BehaviorPattern:
+      type: object
+      properties:
+        patternName:
+          type: string
+        frequency:
+          type: integer
+        description:
+          type: string
+        impact:
+          type: string
+          enum: [high, medium, low]
+
+    SeasonalPattern:
+      type: object
+      properties:
+        period:
+          type: string
+        pattern:
+          type: string
+        multiplier:
+          type: number
+          format: decimal
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

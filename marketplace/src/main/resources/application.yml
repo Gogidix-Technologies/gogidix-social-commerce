@@ -1,0 +1,79 @@
+spring:
+  application:
+    name: marketplace-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/marketplace?useSSL=false&serverTimezone=UTC
+    username: root
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+server:
+  port: 8083
+  servlet:
+    context-path: /marketplace
+
+services:
+  product-service:
+    base-url: http://localhost:8081/products
+  order-service:
+    base-url: http://localhost:8082/orders
+  auth-service:
+    base-url: http://localhost:8084/auth
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    preferIpAddress: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# Configure connection timeouts
+spring.cloud.loadbalancer:
+  ribbon:
+    enabled: false
+
+# Circuit breaker configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      productService:
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        permittedNumberOfCallsInHalfOpenState: 5
+  retry:
+    instances:
+      productService:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+  ratelimiter:
+    instances:
+      productService:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 3s
+
+logging:
+  level:
+    com.ecosystem.marketplace: INFO
+    org.springframework.web: INFO
+    org.hibernate: ERROR

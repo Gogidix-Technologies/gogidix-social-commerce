@@ -1,0 +1,1011 @@
+openapi: 3.0.3
+info:
+  title: Marketplace Service API
+  description: |
+    API for managing the marketplace ecosystem including vendors, product listings, reviews, and marketplace analytics.
+    This service handles vendor management, product listings, reviews, and marketplace operations.
+  version: 1.0.0
+  contact:
+    name: Marketplace Service Support
+    email: support@microsocialecommerce.com
+servers:
+  - url: http://localhost:8083
+    description: Local development server
+  - url: https://api.microsocialecommerce.com/marketplace
+    description: Production server
+tags:
+  - name: Vendor
+    description: Vendor management operations
+  - name: Vendor Lifecycle
+    description: Vendor approval and lifecycle operations
+  - name: Marketplace Listing
+    description: Product listing management operations
+  - name: Review
+    description: Product review operations
+  - name: Analytics
+    description: Marketplace analytics and reporting
+  - name: Vendor Document
+    description: Vendor document management
+  - name: Vendor Contract
+    description: Vendor contract management
+paths:
+  /api/vendors:
+    get:
+      tags:
+        - Vendor
+      summary: Get all vendors
+      description: Retrieve all vendors with pagination (Admin/Marketplace Manager only)
+      operationId: getAllVendors
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          description: Sort field
+          schema:
+            type: string
+        - name: direction
+          in: query
+          description: Sort direction
+          schema:
+            type: string
+            enum: [ASC, DESC]
+      responses:
+        '200':
+          description: Vendors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VendorPage'
+        '403':
+          description: Access denied
+    post:
+      tags:
+        - Vendor
+      summary: Create vendor
+      description: Create a new vendor account
+      operationId: createVendor
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVendorRequest'
+      responses:
+        '201':
+          description: Vendor created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Vendor'
+        '400':
+          description: Invalid input
+        '403':
+          description: Access denied
+  /api/vendors/{id}:
+    get:
+      tags:
+        - Vendor
+      summary: Get vendor by ID
+      description: Retrieve a specific vendor by its unique identifier
+      operationId: getVendorById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Vendor ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Vendor retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Vendor'
+        '403':
+          description: Access denied
+        '404':
+          description: Vendor not found
+    put:
+      tags:
+        - Vendor
+      summary: Update vendor
+      description: Update an existing vendor's information
+      operationId: updateVendor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Vendor ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVendorRequest'
+      responses:
+        '200':
+          description: Vendor updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Vendor'
+        '403':
+          description: Access denied
+        '404':
+          description: Vendor not found
+    delete:
+      tags:
+        - Vendor
+      summary: Delete vendor
+      description: Delete a vendor (Admin/Marketplace Manager only)
+      operationId: deleteVendor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Vendor ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Vendor deleted successfully
+        '403':
+          description: Access denied
+        '404':
+          description: Vendor not found
+  /api/vendors/by-seller/{sellerId}:
+    get:
+      tags:
+        - Vendor
+      summary: Get vendor by seller ID
+      description: Retrieve vendor information by associated seller ID
+      operationId: getVendorBySellerId
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sellerId
+          in: path
+          required: true
+          description: Seller ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Vendor retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Vendor'
+        '403':
+          description: Access denied
+        '404':
+          description: Vendor not found
+  /api/vendors/status/{status}:
+    get:
+      tags:
+        - Vendor
+      summary: Get vendors by status
+      description: Retrieve vendors filtered by status (Admin/Marketplace Manager only)
+      operationId: getVendorsByStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: path
+          required: true
+          description: Vendor status
+          schema:
+            $ref: '#/components/schemas/VendorStatus'
+        - name: page
+          in: query
+          description: Page number (0-based)
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Vendors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VendorPage'
+        '403':
+          description: Access denied
+  /api/vendors/type/{vendorType}:
+    get:
+      tags:
+        - Vendor
+      summary: Get vendors by type
+      description: Retrieve vendors filtered by type (Admin/Marketplace Manager only)
+      operationId: getVendorsByType
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: vendorType
+          in: path
+          required: true
+          description: Vendor type
+          schema:
+            $ref: '#/components/schemas/VendorType'
+        - name: page
+          in: query
+          description: Page number (0-based)
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Vendors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VendorPage'
+        '403':
+          description: Access denied
+  /api/vendors/pending-approval:
+    get:
+      tags:
+        - Vendor Lifecycle
+      summary: Get vendors pending approval
+      description: Retrieve vendors waiting for approval (Admin/Marketplace Manager only)
+      operationId: getVendorsPendingApproval
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Vendors retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VendorPage'
+        '403':
+          description: Access denied
+  /api/vendors/{id}/approve:
+    post:
+      tags:
+        - Vendor Lifecycle
+      summary: Approve vendor
+      description: Approve a vendor application (Admin/Marketplace Manager only)
+      operationId: approveVendor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Vendor ID
+          schema:
+            type: integer
+            format: int64
+        - name: approvedBy
+          in: query
+          required: true
+          description: Administrator approving the vendor
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vendor approved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Vendor'
+        '403':
+          description: Access denied
+        '404':
+          description: Vendor not found
+  /api/vendors/{id}/reject:
+    post:
+      tags:
+        - Vendor Lifecycle
+      summary: Reject vendor
+      description: Reject a vendor application (Admin/Marketplace Manager only)
+      operationId: rejectVendor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Vendor ID
+          schema:
+            type: integer
+            format: int64
+        - name: reason
+          in: query
+          required: true
+          description: Reason for rejection
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vendor rejected successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Vendor'
+        '403':
+          description: Access denied
+        '404':
+          description: Vendor not found
+  /api/vendors/{id}/suspend:
+    post:
+      tags:
+        - Vendor Lifecycle
+      summary: Suspend vendor
+      description: Suspend a vendor account (Admin/Marketplace Manager only)
+      operationId: suspendVendor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Vendor ID
+          schema:
+            type: integer
+            format: int64
+        - name: reason
+          in: query
+          required: true
+          description: Reason for suspension
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vendor suspended successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Vendor'
+        '403':
+          description: Access denied
+        '404':
+          description: Vendor not found
+  /api/vendors/{id}/reactivate:
+    post:
+      tags:
+        - Vendor Lifecycle
+      summary: Reactivate vendor
+      description: Reactivate a suspended vendor (Admin/Marketplace Manager only)
+      operationId: reactivateVendor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Vendor ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Vendor reactivated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Vendor'
+        '403':
+          description: Access denied
+        '404':
+          description: Vendor not found
+  /api/vendors/{id}/terminate:
+    post:
+      tags:
+        - Vendor Lifecycle
+      summary: Terminate vendor
+      description: Terminate a vendor contract (Admin/Marketplace Manager only)
+      operationId: terminateVendor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Vendor ID
+          schema:
+            type: integer
+            format: int64
+        - name: reason
+          in: query
+          required: true
+          description: Reason for termination
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vendor terminated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Vendor'
+        '403':
+          description: Access denied
+        '404':
+          description: Vendor not found
+  /api/vendors/{id}/verify-kyc:
+    post:
+      tags:
+        - Vendor Lifecycle
+      summary: Mark vendor KYC verified
+      description: Mark a vendor as KYC verified (Admin/Marketplace Manager only)
+      operationId: markVendorKycVerified
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Vendor ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Vendor KYC marked as verified
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Vendor'
+        '403':
+          description: Access denied
+        '404':
+          description: Vendor not found
+  /api/vendors/search:
+    get:
+      tags:
+        - Vendor
+      summary: Search vendors
+      description: Search for vendors by keyword (Admin/Marketplace Manager only)
+      operationId: searchVendors
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: searchTerm
+          in: query
+          required: true
+          description: Search term
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number (0-based)
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Vendors found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VendorPage'
+        '403':
+          description: Access denied
+  /api/vendors/counts/by-status:
+    get:
+      tags:
+        - Analytics
+      summary: Get vendor counts by status
+      description: Get vendor statistics by status (Admin/Marketplace Manager only)
+      operationId: getVendorCountsByStatus
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Vendor statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        additionalProperties:
+                          type: integer
+                          format: int64
+        '403':
+          description: Access denied
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+    VendorPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vendor'
+        pageable:
+          type: object
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        last:
+          type: boolean
+        size:
+          type: integer
+        number:
+          type: integer
+        numberOfElements:
+          type: integer
+        first:
+          type: boolean
+        empty:
+          type: boolean
+    Vendor:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        seller:
+          $ref: '#/components/schemas/Seller'
+        companyName:
+          type: string
+        legalName:
+          type: string
+        registrationNumber:
+          type: string
+        taxId:
+          type: string
+        website:
+          type: string
+        contactName:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        businessAddress:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+        yearEstablished:
+          type: integer
+        numberOfEmployees:
+          type: integer
+        annualRevenue:
+          type: string
+        vendorType:
+          $ref: '#/components/schemas/VendorType'
+        status:
+          $ref: '#/components/schemas/VendorStatus'
+        notes:
+          type: string
+        onboardingCompleted:
+          type: boolean
+        documentsVerified:
+          type: boolean
+        termsAccepted:
+          type: boolean
+        termsAcceptedDate:
+          type: string
+          format: date
+        agreementSignedDate:
+          type: string
+          format: date
+        kycVerified:
+          type: boolean
+        approvalDate:
+          type: string
+          format: date
+        approvedBy:
+          type: string
+        acceptsReturns:
+          type: boolean
+        returnPolicy:
+          type: string
+        offersInternationalShipping:
+          type: boolean
+        hasTaxExemption:
+          type: boolean
+        supportEmail:
+          type: string
+        supportPhone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateVendorRequest:
+      type: object
+      required:
+        - sellerId
+        - companyName
+        - contactName
+        - contactEmail
+        - businessAddress
+        - city
+        - state
+        - country
+        - postalCode
+        - vendorType
+      properties:
+        sellerId:
+          type: integer
+          format: int64
+        companyName:
+          type: string
+        legalName:
+          type: string
+        registrationNumber:
+          type: string
+        taxId:
+          type: string
+        website:
+          type: string
+        contactName:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        businessAddress:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+        yearEstablished:
+          type: integer
+        numberOfEmployees:
+          type: integer
+        annualRevenue:
+          type: string
+        vendorType:
+          $ref: '#/components/schemas/VendorType'
+        acceptsReturns:
+          type: boolean
+        returnPolicy:
+          type: string
+        offersInternationalShipping:
+          type: boolean
+        hasTaxExemption:
+          type: boolean
+        supportEmail:
+          type: string
+        supportPhone:
+          type: string
+    UpdateVendorRequest:
+      type: object
+      properties:
+        companyName:
+          type: string
+        legalName:
+          type: string
+        registrationNumber:
+          type: string
+        taxId:
+          type: string
+        website:
+          type: string
+        contactName:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        businessAddress:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+        yearEstablished:
+          type: integer
+        numberOfEmployees:
+          type: integer
+        annualRevenue:
+          type: string
+        vendorType:
+          $ref: '#/components/schemas/VendorType'
+        acceptsReturns:
+          type: boolean
+        returnPolicy:
+          type: string
+        offersInternationalShipping:
+          type: boolean
+        hasTaxExemption:
+          type: boolean
+        supportEmail:
+          type: string
+        supportPhone:
+          type: string
+    Seller:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        status:
+          type: string
+    MarketplaceListing:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        productId:
+          type: integer
+          format: int64
+        sellerId:
+          type: integer
+          format: int64
+        price:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        quantity:
+          type: integer
+        condition:
+          $ref: '#/components/schemas/ItemCondition'
+        isActive:
+          type: boolean
+        isFeatured:
+          type: boolean
+        hasFreeShipping:
+          type: boolean
+        shippingCost:
+          type: number
+          format: decimal
+        averageRating:
+          type: number
+          format: decimal
+        reviewCount:
+          type: integer
+        salesCount:
+          type: integer
+        viewCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        listingId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        title:
+          type: string
+        content:
+          type: string
+        status:
+          $ref: '#/components/schemas/ReviewStatus'
+        helpfulCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    VendorStatus:
+      type: string
+      enum:
+        - PENDING_APPROVAL
+        - ACTIVE
+        - INACTIVE
+        - SUSPENDED
+        - TERMINATED
+        - REJECTED
+    VendorType:
+      type: string
+      enum:
+        - INDIVIDUAL
+        - SMALL_BUSINESS
+        - MEDIUM_BUSINESS
+        - ENTERPRISE
+        - DISTRIBUTOR
+        - WHOLESALER
+        - MANUFACTURER
+    ItemCondition:
+      type: string
+      enum:
+        - NEW
+        - USED_LIKE_NEW
+        - USED_GOOD
+        - USED_FAIR
+        - REFURBISHED
+        - OPEN_BOX
+    ReviewStatus:
+      type: string
+      enum:
+        - PENDING
+        - APPROVED
+        - REJECTED
+        - FLAGGED
+        - ARCHIVED

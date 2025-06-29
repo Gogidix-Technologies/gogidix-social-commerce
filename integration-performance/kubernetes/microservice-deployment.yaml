@@ -1,0 +1,282 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: social-commerce
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: social-commerce
+  labels:
+    app: order-service
+    version: "1.0"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+        version: "1.0"
+    spec:
+      containers:
+      - name: order-service
+        image: social-commerce/order-service:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "production"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "social-commerce-kafka-bootstrap:9092"
+        - name: REDIS_HOST
+          value: "social-commerce-redis"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: database-config
+              key: DB_HOST
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-secret
+              key: DB_PASSWORD
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: social-commerce
+spec:
+  selector:
+    app: order-service
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: order-service-hpa
+  namespace: social-commerce
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: order-service
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 75
+  - type: Pods
+    pods:
+      metric:
+        name: orders_processing_rate
+      target:
+        type: AverageValue
+        averageValue: 100m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: social-commerce
+  labels:
+    app: payment-service
+    version: "1.0"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+        version: "1.0"
+    spec:
+      containers:
+      - name: payment-service
+        image: social-commerce/payment-service:latest
+        ports:
+        - containerPort: 8081
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "production"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "social-commerce-kafka-bootstrap:9092"
+        - name: REDIS_HOST
+          value: "social-commerce-redis"
+        - name: STRIPE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: payment-secrets
+              key: STRIPE_API_KEY
+        - name: PAYPAL_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: payment-secrets
+              key: PAYPAL_CLIENT_ID
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: social-commerce
+spec:
+  selector:
+    app: payment-service
+  ports:
+    - port: 80
+      targetPort: 8081
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: social-commerce
+  labels:
+    app: api-gateway
+    version: "1.0"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+        version: "1.0"
+    spec:
+      containers:
+      - name: api-gateway
+        image: social-commerce/api-gateway:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "production"
+        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+          value: "http://eureka-server:8761/eureka/"
+        resources:
+          requests:
+            cpu: 300m
+            memory: 768Mi
+          limits:
+            cpu: 1500m
+            memory: 1.5Gi
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: social-commerce
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-config
+  namespace: social-commerce
+data:
+  DB_HOST: "postgresql-cluster"
+  DB_PORT: "5432"
+  DB_NAME: "social_commerce"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database-secret
+  namespace: social-commerce
+type: Opaque
+data:
+  DB_PASSWORD: cG9kcGRkb2RxZHE1MzQ1cXdlcnF3ZXI=  # Base64 encoded password
+  DB_USERNAME: c29jaWFsY29tbWVyY2U=  # Base64 encoded username
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: payment-secrets
+  namespace: social-commerce
+type: Opaque
+data:
+  STRIPE_API_KEY: c2tfbGl2ZV9hc2RmYXNkZmFzZGZhc2Rm  # Base64 encoded
+  PAYPAL_CLIENT_ID: QWNGYkFTREZBU0RGQVNERkFTREY=  # Base64 encoded
+  PAYPAL_CLIENT_SECRET: QWNHYkFTREZBU0RGQVNERkFTREY=  # Base64 encoded

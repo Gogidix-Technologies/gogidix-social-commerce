@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vendor-app-service
+  namespace: social-commerce
+  labels:
+    app: vendor-app
+    domain: social-commerce
+spec:
+  selector:
+    app: vendor-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP

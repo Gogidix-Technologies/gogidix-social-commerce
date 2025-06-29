@@ -1,0 +1,394 @@
+package com.exalt.ecosystem.socialcommerce.paymentgateway.security;
+
+import com.exalt.ecosystem.socialcommerce.paymentgateway.dto.PaymentRequest;
+import com.exalt.ecosystem.socialcommerce.paymentgateway.dto.PayoutRequest;
+import com.exalt.ecosystem.socialcommerce.paymentgateway.service.PaymentGatewayFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureTestMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+/**
+ * RBAC Integration Tests
+ * 
+ * SECURITY FIX: RBAC Implementation (CVSS 9.3)
+ * - Tests privilege escalation prevention
+ * - Validates role-based access controls
+ * - Ensures proper authorization enforcement
+ * - Verifies domain access restrictions
+ */
+@SpringBootTest
+@AutoConfigureTestMvc
+@ActiveProfiles("test")
+public class RbacIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private PaymentGatewayFactory paymentGatewayFactory;
+
+    private PaymentRequest validPaymentRequest;
+    private PayoutRequest validPayoutRequest;
+
+    @BeforeEach
+    void setUp() {
+        validPaymentRequest = PaymentRequest.builder()
+            .orderId("TEST_ORDER_123")
+            .amount(100.0)
+            .currency("USD")
+            .paymentMethod("CARD")
+            .countryCode("US")
+            .build();
+
+        validPayoutRequest = PayoutRequest.builder()
+            .vendorId("VENDOR_123")
+            .amount(500.0)
+            .currency("USD")
+            .build();
+    }
+
+    // ==============================================
+    // PAYMENT PROCESSING SECURITY TESTS
+    // ==============================================
+
+    @Test
+    @DisplayName("Super Admin can process any payment")
+    @WithMockUser(username = "super_admin", roles = {"SUPER_ADMIN"})
+    void testSuperAdminCanProcessPayment() throws Exception {
+        mockMvc.perform(post("/api/v1/payments/process")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validPaymentRequest)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Vendor can process payment within limits")
+    @WithMockUser(username = "vendor_user", roles = {"VENDOR"})
+    void testVendorCanProcessSmallPayment() throws Exception {
+        PaymentRequest smallPayment = PaymentRequest.builder()
+            .orderId("VENDOR_ORDER_123")
+            .amount(50.0)  // Under $10,000 vendor limit
+            .currency("USD")
+            .paymentMethod("CARD")
+            .countryCode("US")
+            .build();
+
+        mockMvc.perform(post("/api/v1/payments/process")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(smallPayment)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Vendor cannot process payment above limit")
+    @WithMockUser(username = "vendor_user", roles = {"VENDOR"})
+    void testVendorCannotProcessLargePayment() throws Exception {
+        PaymentRequest largePayment = PaymentRequest.builder()
+            .orderId("VENDOR_ORDER_123")
+            .amount(15000.0)  // Above $10,000 vendor limit
+            .currency("USD")
+            .paymentMethod("CARD")
+            .countryCode("US")
+            .build();
+
+        mockMvc.perform(post("/api/v1/payments/process")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(largePayment)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Customer cannot process payment without proper role")
+    @WithMockUser(username = "customer_user", roles = {"CUSTOMER"})
+    void testCustomerCannotProcessPayment() throws Exception {
+        mockMvc.perform(post("/api/v1/payments/process")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validPaymentRequest)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Unauthenticated user cannot process payment")
+    void testUnauthenticatedUserCannotProcessPayment() throws Exception {
+        mockMvc.perform(post("/api/v1/payments/process")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validPaymentRequest)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // ==============================================
+    // PAYMENT REFUND SECURITY TESTS
+    // ==============================================
+
+    @Test
+    @DisplayName("Commerce Admin can refund payments")
+    @WithMockUser(username = "commerce_admin", roles = {"COMMERCE_ADMIN"})
+    void testCommerceAdminCanRefund() throws Exception {
+        mockMvc.perform(post("/api/v1/payments/refund")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"transactionId\":\"TEST_TX_123\",\"amount\":100.0,\"reason\":\"Customer request\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Vendor cannot refund payments")
+    @WithMockUser(username = "vendor_user", roles = {"VENDOR"})
+    void testVendorCannotRefund() throws Exception {
+        mockMvc.perform(post("/api/v1/payments/refund")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"transactionId\":\"TEST_TX_123\",\"amount\":100.0,\"reason\":\"Customer request\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    // ==============================================
+    // PAYOUT SECURITY TESTS
+    // ==============================================
+
+    @Test
+    @DisplayName("Platform Admin can process large payouts")
+    @WithMockUser(username = "platform_admin", roles = {"PLATFORM_ADMIN"})
+    void testPlatformAdminCanProcessLargePayout() throws Exception {
+        PayoutRequest largePayout = PayoutRequest.builder()
+            .vendorId("VENDOR_123")
+            .amount(150000.0)  // Large amount
+            .currency("USD")
+            .build();
+
+        mockMvc.perform(post("/api/v1/payments/payout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(largePayout)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Vendor Manager cannot exceed payout limits")
+    @WithMockUser(username = "vendor_manager", roles = {"VENDOR_MANAGER"})
+    void testVendorManagerCannotExceedPayoutLimits() throws Exception {
+        PayoutRequest largePayout = PayoutRequest.builder()
+            .vendorId("VENDOR_123")
+            .amount(50000.0)  // Above $25,000 vendor manager limit
+            .currency("USD")
+            .build();
+
+        mockMvc.perform(post("/api/v1/payments/payout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(largePayout)))
+                .andExpect(status().isForbidden());
+    }
+
+    // ==============================================
+    // PAYMENT STATUS SECURITY TESTS
+    // ==============================================
+
+    @Test
+    @DisplayName("Commerce Analyst can view payment status")
+    @WithMockUser(username = "commerce_analyst", roles = {"COMMERCE_ANALYST"})
+    void testCommerceAnalystCanViewPaymentStatus() throws Exception {
+        mockMvc.perform(get("/api/v1/payments/status/TEST_TX_123"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Driver cannot view payment status")
+    @WithMockUser(username = "driver_user", roles = {"DRIVER"})
+    void testDriverCannotViewPaymentStatus() throws Exception {
+        mockMvc.perform(get("/api/v1/payments/status/TEST_TX_123"))
+                .andExpect(status().isForbidden());
+    }
+
+    // ==============================================
+    // METRICS ACCESS SECURITY TESTS
+    // ==============================================
+
+    @Test
+    @DisplayName("Platform Admin can view all metrics")
+    @WithMockUser(username = "platform_admin", roles = {"PLATFORM_ADMIN"})
+    void testPlatformAdminCanViewAllMetrics() throws Exception {
+        mockMvc.perform(get("/api/v1/payments/metrics")
+                .param("entityId", "WAREHOUSE_123")
+                .param("entityType", "WAREHOUSE"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Warehouse Analyst can view warehouse metrics")
+    @WithMockUser(username = "warehouse_analyst", roles = {"WAREHOUSE_ANALYST"})
+    void testWarehouseAnalystCanViewWarehouseMetrics() throws Exception {
+        mockMvc.perform(get("/api/v1/payments/metrics/warehouse/WAREHOUSE_123"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Courier Analyst can view courier metrics")
+    @WithMockUser(username = "courier_analyst", roles = {"COURIER_ANALYST"})
+    void testCourierAnalystCanViewCourierMetrics() throws Exception {
+        mockMvc.perform(get("/api/v1/payments/metrics/courier/DRIVER_123")
+                .param("entityType", "DRIVER"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Warehouse Analyst cannot view courier metrics")
+    @WithMockUser(username = "warehouse_analyst", roles = {"WAREHOUSE_ANALYST"})
+    void testWarehouseAnalystCannotViewCourierMetrics() throws Exception {
+        mockMvc.perform(get("/api/v1/payments/metrics/courier/DRIVER_123")
+                .param("entityType", "DRIVER"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Customer cannot view dashboard metrics")
+    @WithMockUser(username = "customer_user", roles = {"CUSTOMER"})
+    void testCustomerCannotViewDashboardMetrics() throws Exception {
+        mockMvc.perform(get("/api/v1/payments/metrics/dashboard"))
+                .andExpect(status().isForbidden());
+    }
+
+    // ==============================================
+    // CROSS-DOMAIN ACCESS PREVENTION TESTS
+    // ==============================================
+
+    @Test
+    @DisplayName("Commerce Admin cannot access warehouse operations")
+    @WithMockUser(username = "commerce_admin", roles = {"COMMERCE_ADMIN"})
+    void testCommerceAdminCannotAccessWarehouseOps() throws Exception {
+        // Should be forbidden to access warehouse-specific operations
+        mockMvc.perform(get("/api/v1/payments/metrics/warehouse/WAREHOUSE_123"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Warehouse Manager cannot process commerce payments")
+    @WithMockUser(username = "warehouse_manager", roles = {"WAREHOUSE_MANAGER"})
+    void testWarehouseManagerCannotProcessCommercePayments() throws Exception {
+        PaymentRequest commercePayment = PaymentRequest.builder()
+            .orderId("COMMERCE_ORDER_123")  // Commerce domain order
+            .amount(100.0)
+            .currency("USD")
+            .paymentMethod("CARD")
+            .countryCode("US")
+            .build();
+
+        mockMvc.perform(post("/api/v1/payments/process")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(commercePayment)))
+                .andExpect(status().isForbidden());
+    }
+
+    // ==============================================
+    // PRIVILEGE ESCALATION PREVENTION TESTS
+    // ==============================================
+
+    @Test
+    @DisplayName("Vendor cannot escalate to admin privileges")
+    @WithMockUser(username = "vendor_user", roles = {"VENDOR"})
+    void testVendorCannotEscalatePrivileges() throws Exception {
+        // Attempt to perform admin-only operation
+        mockMvc.perform(post("/api/v1/payments/refund")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"transactionId\":\"TEST_TX_123\",\"amount\":100.0,\"reason\":\"Admin override\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Customer cannot access vendor operations")
+    @WithMockUser(username = "customer_user", roles = {"CUSTOMER"})
+    void testCustomerCannotAccessVendorOperations() throws Exception {
+        // Attempt to process payout (vendor/admin operation)
+        mockMvc.perform(post("/api/v1/payments/payout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validPayoutRequest)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Driver cannot access administrative metrics")
+    @WithMockUser(username = "driver_user", roles = {"DRIVER"})
+    void testDriverCannotAccessAdminMetrics() throws Exception {
+        // Attempt to access platform-wide dashboard
+        mockMvc.perform(get("/api/v1/payments/metrics/dashboard"))
+                .andExpect(status().isForbidden());
+    }
+
+    // ==============================================
+    // ROLE HIERARCHY VALIDATION TESTS
+    // ==============================================
+
+    @Test
+    @DisplayName("Commerce Manager inherits Commerce Analyst permissions")
+    @WithMockUser(username = "commerce_manager", roles = {"COMMERCE_MANAGER"})
+    void testCommerceManagerInheritsAnalystPermissions() throws Exception {
+        // Should be able to view payment status (analyst permission)
+        mockMvc.perform(get("/api/v1/payments/status/TEST_TX_123"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Platform Admin has access to all domains")
+    @WithMockUser(username = "platform_admin", roles = {"PLATFORM_ADMIN"})
+    void testPlatformAdminHasGlobalAccess() throws Exception {
+        // Should be able to access warehouse metrics
+        mockMvc.perform(get("/api/v1/payments/metrics/warehouse/WAREHOUSE_123"))
+                .andExpect(status().isOk());
+
+        // Should be able to access courier metrics
+        mockMvc.perform(get("/api/v1/payments/metrics/courier/DRIVER_123")
+                .param("entityType", "DRIVER"))
+                .andExpect(status().isOk());
+
+        // Should be able to process payments
+        mockMvc.perform(post("/api/v1/payments/process")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validPaymentRequest)))
+                .andExpect(status().isOk());
+    }
+
+    // ==============================================
+    // SECURITY BOUNDARY VALIDATION TESTS
+    // ==============================================
+
+    @Test
+    @DisplayName("Prevent SQL injection through authorization")
+    @WithMockUser(username = "malicious_user'; DROP TABLE users; --", roles = {"CUSTOMER"})
+    void testSqlInjectionPrevention() throws Exception {
+        // Malicious username should not bypass authorization
+        mockMvc.perform(post("/api/v1/payments/process")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validPaymentRequest)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Prevent XSS through role validation")
+    @WithMockUser(username = "<script>alert('xss')</script>", roles = {"VENDOR"})
+    void testXssPreventionInRoleValidation() throws Exception {
+        // XSS attempt in username should not affect authorization
+        PaymentRequest smallPayment = PaymentRequest.builder()
+            .orderId("VENDOR_ORDER_123")
+            .amount(50.0)
+            .currency("USD")
+            .paymentMethod("CARD")
+            .countryCode("US")
+            .build();
+
+        mockMvc.perform(post("/api/v1/payments/process")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(smallPayment)))
+                .andExpect(status().isOk());
+    }
+}

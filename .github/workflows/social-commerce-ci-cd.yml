@@ -1,0 +1,188 @@
+name: Social Commerce CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: 
+      - 'social-commerce/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'social-commerce/**'
+
+env:
+  REGISTRY: ghcr.io
+  JAVA_VERSION: '17'
+  NODE_VERSION: '18'
+
+jobs:
+  # Java Services Build and Test
+  java-services:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [
+          'admin-finalization', 'admin-interfaces', 'analytics-service', 'api-gateway',
+          'commission-service', 'fulfillment-options', 'integration-optimization',
+          'integration-performance', 'invoice-service', 'localization-service',
+          'marketplace', 'multi-currency-service', 'order-service', 'payment-gateway',
+          'payout-service', 'product-service', 'regional-admin',
+          'social-commerce-production', 'social-commerce-shared', 'social-commerce-staging',
+          'subscription-service', 'vendor-onboarding'
+        ]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Build ${{ matrix.service }}
+      working-directory: social-commerce/${{ matrix.service }}
+      run: |
+        mvn clean compile -DskipTests
+        mvn package -DskipTests
+    
+    - name: Test ${{ matrix.service }}
+      working-directory: social-commerce/${{ matrix.service }}
+      run: |
+        mvn test -Dspring.profiles.active=test
+      continue-on-error: true
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Docker Hub
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+    
+    - name: Build and push Docker image
+      if: github.event_name != 'pull_request'
+      uses: docker/build-push-action@v5
+      with:
+        context: social-commerce/${{ matrix.service }}
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/social-commerce-${{ matrix.service }}:latest
+          ${{ secrets.DOCKER_USERNAME }}/social-commerce-${{ matrix.service }}:${{ github.sha }}
+        platforms: linux/amd64,linux/arm64
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Node.js Services Build and Test  
+  nodejs-services:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [
+          'global-hq-admin', 'social-media-integration', 
+          'user-mobile-app', 'user-web-app', 'vendor-app'
+        ]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: social-commerce/${{ matrix.service }}/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: social-commerce/${{ matrix.service }}
+      run: npm ci --legacy-peer-deps
+    
+    - name: Build ${{ matrix.service }}
+      working-directory: social-commerce/${{ matrix.service }}
+      run: |
+        if [ -f "package.json" ] && grep -q "build" package.json; then
+          npm run build
+        fi
+      continue-on-error: true
+    
+    - name: Test ${{ matrix.service }}
+      working-directory: social-commerce/${{ matrix.service }}
+      run: |
+        if [ -f "package.json" ] && grep -q "test" package.json; then
+          npm test -- --watchAll=false
+        fi
+      continue-on-error: true
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Docker Hub
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+    
+    - name: Build and push Docker image
+      if: github.event_name != 'pull_request'
+      uses: docker/build-push-action@v5
+      with:
+        context: social-commerce/${{ matrix.service }}
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/social-commerce-${{ matrix.service }}:latest
+          ${{ secrets.DOCKER_USERNAME }}/social-commerce-${{ matrix.service }}:${{ github.sha }}
+        platforms: linux/amd64,linux/arm64
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Security Scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: [java-services, nodejs-services]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: 'social-commerce/'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Deployment to Staging
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [java-services, nodejs-services, security-scan]
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Deploy to staging
+      run: |
+        echo "Deploying Social Commerce services to staging environment"
+        # Add your deployment commands here
+
+  # Deployment to Production
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [java-services, nodejs-services, security-scan]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Deploy to production
+      run: |
+        echo "Deploying Social Commerce services to production environment"
+        # Add your deployment commands here

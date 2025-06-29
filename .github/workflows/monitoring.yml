@@ -1,0 +1,37 @@
+name: Monitoring and Alerts
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Service Health
+        run: |
+          # Add health check endpoints
+          SERVICES=(
+            "https://api.socialcommerce.com/health"
+            "https://analytics.socialcommerce.com/health"
+          )
+          
+          for service in "${SERVICES[@]}"; do
+            if curl -f "$service"; then
+              echo "✅ $service is healthy"
+            else
+              echo "❌ $service is down"
+              exit 1
+            fi
+          done
+          
+  performance-check:
+    name: Performance Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Performance Tests
+        run: |
+          echo "Running performance benchmarks..."
+          # Add performance testing tools

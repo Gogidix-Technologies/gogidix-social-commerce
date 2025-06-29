@@ -1,0 +1,117 @@
+spring:
+  application:
+    name: product-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/product_service_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: false
+
+server:
+  port: 8085
+
+# Eureka Client Configuration
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    preferIpAddress: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# Security Configuration
+spring.security:
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: http://localhost:8084/auth
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# Application Information
+info:
+  app:
+    name: Product Service
+    description: Product catalog and management service for social commerce
+    version: 1.0.0
+    environment: development
+
+# Logging Configuration
+logging:
+  level:
+    com.socialcommerce.product: INFO
+    org.springframework.cloud: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Business Configuration
+product:
+  service:
+    default-page-size: 20
+    max-page-size: 100
+    cache-ttl-minutes: 60
+    image-base-url: https://cdn.socialcommerce.com/products/
+    
+# Integration Configuration
+integration:
+  inventory-service:
+    base-url: http://localhost:8091
+    timeout: 5000
+    circuit-breaker:
+      enabled: true
+      failure-threshold: 5
+      recovery-timeout: 30000
+  
+  marketplace:
+    sync-enabled: true
+    batch-size: 100
+    
+# Feature Flags
+features:
+  product-recommendations: true
+  inventory-sync: true
+  price-optimization: false
+  advanced-search: true

@@ -1,0 +1,207 @@
+spring:
+  application:
+    name: payout-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payout_service_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: false
+  
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: PayoutScheduler
+            instanceId: AUTO
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+            useProperties: false
+            tablePrefix: QRTZ_
+            isClustered: false
+          threadPool:
+            class: org.quartz.simpl.SimpleThreadPool
+            threadCount: 5
+
+server:
+  port: 8087
+
+# Eureka Client Configuration
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    preferIpAddress: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+# Security Configuration
+spring.security:
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: http://localhost:8084/auth
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# Application Information
+info:
+  app:
+    name: Payout Service
+    description: Vendor payouts and commission disbursement service
+    version: 1.0.0
+    environment: development
+
+# Logging Configuration
+logging:
+  level:
+    com.socialcommerce.payout: INFO
+    org.springframework.cloud: DEBUG
+    org.springframework.security: DEBUG
+    org.quartz: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Payout Service Configuration
+payout:
+  service:
+    default-currency: USD
+    supported-currencies:
+      - USD
+      - EUR
+      - GBP
+      - CAD
+    minimum-payout-amount: 25.00
+    maximum-payout-amount: 50000.00
+    processing-fee-rate: 0.025  # 2.5%
+    platform-fee-rate: 0.05    # 5%
+    
+  schedule:
+    daily-processing-time: "09:00"
+    weekly-processing-day: "FRIDAY"
+    monthly-processing-day: 1
+    
+  limits:
+    max-payouts-per-vendor-per-day: 5
+    max-total-amount-per-day: 100000.00
+    
+# Banking Integration Configuration
+banking:
+  providers:
+    stripe:
+      enabled: true
+      api-key: ${STRIPE_PAYOUT_API_KEY:sk_test_mock_payout_key}
+      webhook-secret: ${STRIPE_PAYOUT_WEBHOOK_SECRET:whsec_mock_payout_secret}
+      
+    wise:
+      enabled: false
+      api-token: ${WISE_API_TOKEN:mock_wise_token}
+      profile-id: ${WISE_PROFILE_ID:mock_profile_id}
+      
+    paypal:
+      enabled: true
+      client-id: ${PAYPAL_PAYOUT_CLIENT_ID:mock_payout_client_id}
+      client-secret: ${PAYPAL_PAYOUT_CLIENT_SECRET:mock_payout_client_secret}
+
+# Integration Configuration
+integration:
+  commission-service:
+    base-url: http://localhost:8100
+    timeout: 10000
+    
+  payment-gateway:
+    base-url: http://localhost:8086
+    timeout: 10000
+    
+  order-service:
+    base-url: http://localhost:8084
+    timeout: 5000
+    
+  vendor-service:
+    base-url: http://localhost:8089
+    timeout: 5000
+
+# Notification Configuration
+notifications:
+  email:
+    enabled: true
+    templates:
+      payout-processed: "payout-processed"
+      payout-failed: "payout-failed"
+      payout-scheduled: "payout-scheduled"
+      
+  sms:
+    enabled: false
+    provider: "twilio"
+
+# Risk Management
+risk:
+  fraud-detection:
+    enabled: true
+    max-amount-threshold: 10000.00
+    unusual-pattern-detection: true
+    
+  compliance:
+    aml-checks: true
+    kyc-verification: true
+    tax-reporting: true
+
+# Audit Configuration
+audit:
+  enabled: true
+  include-request-body: true
+  include-response-body: false
+  retention-days: 365
+
+# Feature Flags
+features:
+  automatic-payouts: true
+  instant-payouts: false
+  cryptocurrency-payouts: false
+  international-payouts: true
+  bulk-payouts: true
+  payout-analytics: true

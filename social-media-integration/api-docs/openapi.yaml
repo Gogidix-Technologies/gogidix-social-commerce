@@ -1,0 +1,833 @@
+openapi: 3.0.3
+info:
+  title: Social Media Integration Service API
+  description: |
+    API for integrating social media platforms with the Social Commerce ecosystem.
+    This service handles OAuth authentication, content sharing, social selling, and engagement tracking across multiple platforms.
+  version: 1.0.0
+  contact:
+    name: Social Media Integration Service Support
+    email: support@microsocialecommerce.com
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://api.microsocialecommerce.com/social
+    description: Production server
+tags:
+  - name: Authentication
+    description: OAuth and social platform connection management
+  - name: Sharing
+    description: Content sharing across social platforms
+  - name: Analytics
+    description: Social engagement metrics and analytics
+  - name: Activity Feed
+    description: Activity feed management and tracking
+  - name: Webhooks
+    description: Social platform webhook handlers
+paths:
+  /auth/facebook:
+    get:
+      tags:
+        - Authentication
+      summary: Initiate Facebook OAuth
+      description: Start the OAuth flow for connecting a Facebook account
+      operationId: initiateFacebookAuth
+      responses:
+        '302':
+          description: Redirect to Facebook OAuth page
+        '500':
+          description: OAuth initialization error
+  /auth/facebook/callback:
+    get:
+      tags:
+        - Authentication
+      summary: Facebook OAuth callback
+      description: Handle Facebook OAuth callback and save connection
+      operationId: handleFacebookCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: OAuth authorization code
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: OAuth state parameter
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to client app with success/error status
+  /auth/twitter:
+    get:
+      tags:
+        - Authentication
+      summary: Initiate Twitter OAuth
+      description: Start the OAuth flow for connecting a Twitter account
+      operationId: initiateTwitterAuth
+      responses:
+        '302':
+          description: Redirect to Twitter OAuth page
+        '500':
+          description: OAuth initialization error
+  /auth/twitter/callback:
+    get:
+      tags:
+        - Authentication
+      summary: Twitter OAuth callback
+      description: Handle Twitter OAuth callback and save connection
+      operationId: handleTwitterCallback
+      parameters:
+        - name: oauth_token
+          in: query
+          required: true
+          description: OAuth token
+          schema:
+            type: string
+        - name: oauth_verifier
+          in: query
+          required: true
+          description: OAuth verifier
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to client app with success/error status
+  /auth/instagram:
+    get:
+      tags:
+        - Authentication
+      summary: Initiate Instagram OAuth
+      description: Start the OAuth flow for connecting an Instagram account
+      operationId: initiateInstagramAuth
+      responses:
+        '302':
+          description: Redirect to Instagram OAuth page
+        '500':
+          description: OAuth initialization error
+  /auth/instagram/callback:
+    get:
+      tags:
+        - Authentication
+      summary: Instagram OAuth callback
+      description: Handle Instagram OAuth callback and save connection
+      operationId: handleInstagramCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: OAuth authorization code
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to client app with success/error status
+  /auth/pinterest:
+    get:
+      tags:
+        - Authentication
+      summary: Initiate Pinterest OAuth
+      description: Start the OAuth flow for connecting a Pinterest account
+      operationId: initiatePinterestAuth
+      responses:
+        '302':
+          description: Redirect to Pinterest OAuth page
+        '500':
+          description: OAuth initialization error
+  /auth/pinterest/callback:
+    get:
+      tags:
+        - Authentication
+      summary: Pinterest OAuth callback
+      description: Handle Pinterest OAuth callback and save connection
+      operationId: handlePinterestCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: OAuth authorization code
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to client app with success/error status
+  /auth/accounts:
+    get:
+      tags:
+        - Authentication
+      summary: Get connected accounts
+      description: Get all connected social accounts for a user
+      operationId: getConnectedAccounts
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Connected accounts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  accounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SocialAccount'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /auth/accounts/{platform}:
+    delete:
+      tags:
+        - Authentication
+      summary: Disconnect social account
+      description: Disconnect a specific social platform account
+      operationId: disconnectAccount
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          description: Social platform to disconnect
+          schema:
+            type: string
+            enum: [facebook, twitter, instagram, pinterest, tiktok, whatsapp]
+      responses:
+        '200':
+          description: Account disconnected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '401':
+          description: Unauthorized
+        '404':
+          description: Account not found
+        '500':
+          description: Server error
+  /auth/validate/{platform}:
+    get:
+      tags:
+        - Authentication
+      summary: Validate platform connection
+      description: Check if the user's connection to a platform is valid
+      operationId: validatePlatformConnection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          description: Social platform to validate
+          schema:
+            type: string
+            enum: [facebook, twitter, instagram, pinterest, tiktok, whatsapp]
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  isValid:
+                    type: boolean
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /auth/refresh/{platform}:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh platform token
+      description: Refresh the access token for a connected platform
+      operationId: refreshPlatformToken
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          description: Social platform to refresh token for
+          schema:
+            type: string
+            enum: [facebook, twitter, instagram, pinterest, tiktok, whatsapp]
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  accessToken:
+                    type: string
+                  expiresIn:
+                    type: integer
+        '401':
+          description: Unauthorized
+        '404':
+          description: Account not found
+        '500':
+          description: Server error
+  /share/content:
+    post:
+      tags:
+        - Sharing
+      summary: Share content to social platform
+      description: Share product, post, or other content to a social platform
+      operationId: shareContent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareContentRequest'
+      responses:
+        '200':
+          description: Content shared successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /share/link:
+    post:
+      tags:
+        - Sharing
+      summary: Generate shareable link
+      description: Generate a trackable shareable link for content
+      operationId: generateShareableLink
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateShareLinkRequest'
+      responses:
+        '200':
+          description: Shareable link generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareLinkResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /share/click/{shareId}:
+    post:
+      tags:
+        - Sharing
+      summary: Track share click
+      description: Track when someone clicks on a shared link
+      operationId: trackShareClick
+      parameters:
+        - name: shareId
+          in: path
+          required: true
+          description: ID of the share to track
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Click tracked (returns tracking pixel)
+          content:
+            image/gif:
+              schema:
+                type: string
+                format: binary
+  /share/stats/{contentType}/{contentId}:
+    get:
+      tags:
+        - Analytics
+      summary: Get share statistics
+      description: Get sharing statistics for specific content
+      operationId: getShareStatistics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: contentType
+          in: path
+          required: true
+          description: Type of content (product, post, etc.)
+          schema:
+            type: string
+        - name: contentId
+          in: path
+          required: true
+          description: ID of the content
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Share statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareStatistics'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /analytics/engagement:
+    get:
+      tags:
+        - Analytics
+      summary: Get engagement metrics
+      description: Get engagement metrics across all social platforms
+      operationId: getEngagementMetrics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          description: Start date for metrics (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: End date for metrics (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: platform
+          in: query
+          description: Specific platform to filter by
+          schema:
+            type: string
+            enum: [facebook, twitter, instagram, pinterest, tiktok, whatsapp]
+      responses:
+        '200':
+          description: Engagement metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EngagementMetrics'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /analytics/performance/{platform}:
+    get:
+      tags:
+        - Analytics
+      summary: Get platform-specific performance
+      description: Get detailed performance metrics for a specific platform
+      operationId: getPlatformPerformance
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          description: Social platform
+          schema:
+            type: string
+            enum: [facebook, twitter, instagram, pinterest, tiktok, whatsapp]
+        - name: startDate
+          in: query
+          description: Start date for metrics (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: End date for metrics (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Platform performance retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformPerformance'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Platform not found
+        '500':
+          description: Server error
+  /activity-feed:
+    get:
+      tags:
+        - Activity Feed
+      summary: Get user's activity feed
+      description: Get aggregated social activity feed for a user
+      operationId: getActivityFeed
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 20
+        - name: platforms
+          in: query
+          description: Comma-separated list of platforms to include
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Activity feed retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityFeed'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Server error
+  /webhooks/{platform}:
+    post:
+      tags:
+        - Webhooks
+      summary: Handle platform webhook
+      description: Handle incoming webhooks from social platforms
+      operationId: handlePlatformWebhook
+      parameters:
+        - name: platform
+          in: path
+          required: true
+          description: Social platform
+          schema:
+            type: string
+            enum: [facebook, twitter, instagram, pinterest, tiktok, whatsapp]
+        - name: X-Hub-Signature
+          in: header
+          description: Webhook signature for verification
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed successfully
+        '400':
+          description: Invalid webhook data
+        '401':
+          description: Invalid signature
+        '500':
+          description: Processing error
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Check service health and status
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                    example: 1.0.0
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    SocialAccount:
+      type: object
+      properties:
+        userId:
+          type: string
+        platform:
+          type: string
+          enum: [facebook, twitter, instagram, pinterest, tiktok, whatsapp]
+        platformUserId:
+          type: string
+        platformUsername:
+          type: string
+        profilePictureUrl:
+          type: string
+        isActive:
+          type: boolean
+        lastUsed:
+          type: string
+          format: date-time
+        scope:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ShareContentRequest:
+      type: object
+      required:
+        - platform
+        - contentData
+      properties:
+        platform:
+          type: string
+          enum: [facebook, twitter, instagram, pinterest, tiktok, whatsapp]
+        contentData:
+          type: object
+          required:
+            - type
+            - id
+          properties:
+            type:
+              type: string
+              enum: [product, post, article, video, image]
+            id:
+              type: string
+            name:
+              type: string
+            description:
+              type: string
+            image:
+              type: string
+            url:
+              type: string
+        message:
+          type: string
+          description: Optional message to accompany the share
+    ShareResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        shareId:
+          type: string
+        platform:
+          type: string
+        platformResponseId:
+          type: string
+        platformResponseUrl:
+          type: string
+    GenerateShareLinkRequest:
+      type: object
+      required:
+        - contentData
+      properties:
+        contentData:
+          type: object
+          required:
+            - type
+            - id
+          properties:
+            type:
+              type: string
+              enum: [product, post, article, video, image]
+            id:
+              type: string
+            name:
+              type: string
+            description:
+              type: string
+            image:
+              type: string
+        platform:
+          type: string
+          enum: [facebook, twitter, instagram, pinterest, tiktok, whatsapp]
+          description: Optional specific platform to generate link for
+    ShareLinkResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        url:
+          type: string
+        metadata:
+          type: object
+          properties:
+            title:
+              type: string
+            description:
+              type: string
+            image:
+              type: string
+        utmParams:
+          type: object
+    ShareStatistics:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            byPlatform:
+              type: array
+              items:
+                type: object
+                properties:
+                  platform:
+                    type: string
+                  count:
+                    type: integer
+                  clicks:
+                    type: integer
+                  engagement:
+                    type: number
+            totals:
+              type: object
+              properties:
+                shareCount:
+                  type: integer
+                clickCount:
+                  type: integer
+                engagementRate:
+                  type: number
+    EngagementMetrics:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            totalShares:
+              type: integer
+            totalClicks:
+              type: integer
+            totalLikes:
+              type: integer
+            totalComments:
+              type: integer
+            engagementRate:
+              type: number
+            platformBreakdown:
+              type: array
+              items:
+                type: object
+                properties:
+                  platform:
+                    type: string
+                  shares:
+                    type: integer
+                  clicks:
+                    type: integer
+                  likes:
+                    type: integer
+                  comments:
+                    type: integer
+                  engagementRate:
+                    type: number
+    PlatformPerformance:
+      type: object
+      properties:
+        success:
+          type: boolean
+        platform:
+          type: string
+        data:
+          type: object
+          properties:
+            followerGrowth:
+              type: integer
+            averageReach:
+              type: integer
+            averageImpressions:
+              type: integer
+            bestPostingTime:
+              type: string
+            topContent:
+              type: array
+              items:
+                type: object
+                properties:
+                  contentId:
+                    type: string
+                  contentType:
+                    type: string
+                  engagement:
+                    type: number
+                  reach:
+                    type: integer
+    ActivityFeed:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            activities:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                    enum: [share, like, comment, follow, post]
+                  platform:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+                  content:
+                    type: object
+                  engagement:
+                    type: object
+            pagination:
+              type: object
+              properties:
+                page:
+                  type: integer
+                limit:
+                  type: integer
+                total:
+                  type: integer
+                hasMore:
+                  type: boolean

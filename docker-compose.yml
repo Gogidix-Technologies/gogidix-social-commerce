@@ -1,0 +1,279 @@
+version: '3.8'
+
+services:
+  # Infrastructure Services
+  postgres:
+    image: postgres:15-alpine
+    container_name: social-commerce-postgres
+    environment:
+      POSTGRES_DB: socialcommerce
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_MULTIPLE_DATABASES: order_service,product_service,payment_gateway,marketplace,analytics_service
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init-multiple-db.sh:/docker-entrypoint-initdb.d/init-multiple-db.sh
+    ports:
+      - "5432:5432"
+    networks:
+      - social-commerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: social-commerce-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - social-commerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Service Discovery
+  eureka-server:
+    image: springcloud/eureka:latest
+    container_name: social-commerce-eureka
+    ports:
+      - "8761:8761"
+    networks:
+      - social-commerce-network
+    environment:
+      - EUREKA_INSTANCE_HOSTNAME=eureka-server
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: social-commerce-api-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - social-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Core Business Services
+  product-service:
+    build: ./product-service
+    container_name: social-commerce-product-service
+    ports:
+      - "8082:8080"
+    networks:
+      - social-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_NAME=product_service
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+    depends_on:
+      - eureka-server
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  order-service:
+    build: ./order-service
+    container_name: social-commerce-order-service
+    ports:
+      - "8083:8080"
+    networks:
+      - social-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_NAME=order_service
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+    depends_on:
+      - eureka-server
+      - postgres
+      - redis
+      - product-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  payment-gateway:
+    build: ./payment-gateway
+    container_name: social-commerce-payment-gateway
+    ports:
+      - "8084:8080"
+    networks:
+      - social-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_NAME=payment_gateway
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+    depends_on:
+      - eureka-server
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  marketplace:
+    build: ./marketplace
+    container_name: social-commerce-marketplace
+    ports:
+      - "8085:8080"
+    networks:
+      - social-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_NAME=marketplace
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+    depends_on:
+      - eureka-server
+      - postgres
+      - redis
+      - product-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Analytics and Support Services
+  analytics-service:
+    build: ./analytics-service
+    container_name: social-commerce-analytics-service
+    ports:
+      - "8086:8080"
+    networks:
+      - social-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_NAME=analytics_service
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+    depends_on:
+      - eureka-server
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  commission-service:
+    build: ./commission-service
+    container_name: social-commerce-commission-service
+    ports:
+      - "8087:8080"
+    networks:
+      - social-commerce-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_HOST=postgres
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+    depends_on:
+      - eureka-server
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Frontend Applications
+  user-web-app:
+    build: ./user-web-app
+    container_name: social-commerce-user-web-app
+    ports:
+      - "3000:80"
+    networks:
+      - social-commerce-network
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+    depends_on:
+      - api-gateway
+
+  vendor-app:
+    build: ./vendor-app
+    container_name: social-commerce-vendor-app
+    ports:
+      - "3001:80"
+    networks:
+      - social-commerce-network
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+    depends_on:
+      - api-gateway
+
+  global-hq-admin:
+    build: ./global-hq-admin
+    container_name: social-commerce-global-hq-admin
+    ports:
+      - "3002:80"
+    networks:
+      - social-commerce-network
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+    depends_on:
+      - api-gateway
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  social-commerce-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

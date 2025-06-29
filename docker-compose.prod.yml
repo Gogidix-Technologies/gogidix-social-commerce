@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # Production overrides
+  postgres:
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  api-gateway:
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  marketplace:
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1.5G
+
+secrets:
+  db_password:
+    external: true

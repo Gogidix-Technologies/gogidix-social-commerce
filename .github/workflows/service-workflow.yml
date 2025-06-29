@@ -1,0 +1,41 @@
+name: Service Workflow
+
+on:
+  push:
+    paths:
+      - '*/src/**'
+      - '*/pom.xml'
+      - '*/Dockerfile'
+
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.detect.outputs.services }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+          
+      - name: Detect changed services
+        id: detect
+        run: |
+          CHANGED_SERVICES=$(git diff --name-only HEAD^ HEAD | grep -E "^[^/]+/" | cut -d'/' -f1 | sort -u | jq -R . | jq -s .)
+          echo "services=$CHANGED_SERVICES" >> $GITHUB_OUTPUT
+          
+  build-changed:
+    name: Build Changed Service
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.services != '[]'
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build ${{ matrix.service }}
+        run: |
+          echo "Building changed service: ${{ matrix.service }}"
+          # Add build steps here

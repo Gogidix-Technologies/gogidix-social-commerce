@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: social-media-integration-service
+  namespace: social-commerce
+  labels:
+    app: social-media-integration
+    domain: social-commerce
+spec:
+  selector:
+    app: social-media-integration
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP

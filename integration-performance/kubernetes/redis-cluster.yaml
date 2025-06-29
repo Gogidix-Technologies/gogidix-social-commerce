@@ -1,0 +1,148 @@
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: social-commerce-redis
+  namespace: social-commerce
+spec:
+  clusterSize: 6
+  redisClusterVersion: redis-6.2.6
+  persistenceEnabled: true
+  KubernetesConfig:
+    image: quay.io/opstree/redis:v6.2.6
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+  redisConfigSource:
+    configMapApplyAnnotation:
+      redis.opstreelabs.in/skip-reconcile: "true"
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: "fast-ssd"
+  persistenceConfig:
+    enableAOF: true
+    enableRDB: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: social-commerce
+data:
+  redis.conf: |
+    # Memory Configuration
+    maxmemory 1gb
+    maxmemory-policy allkeys-lru
+    
+    # Persistence Configuration
+    save 900 1
+    save 300 10
+    save 60 10000
+    appendonly yes
+    appendfilename "appendonly.aof"
+    
+    # Performance Tuning
+    tcp-keepalive 60
+    timeout 300
+    tcp-backlog 511
+    maxclients 10000
+    
+    # Security
+    requirepass "${REDIS_PASSWORD}"
+    masterauth "${REDIS_PASSWORD}"
+    
+    # Cluster Configuration
+    cluster-enabled yes
+    cluster-config-file nodes-6379.conf
+    cluster-node-timeout 5000
+    cluster-require-full-coverage yes
+    
+    # Slow Log
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: social-commerce-redis
+  namespace: social-commerce
+spec:
+  selector:
+    app: social-commerce-redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: social-commerce-redis-headless
+  namespace: social-commerce
+spec:
+  selector:
+    app: social-commerce-redis
+  clusterIP: None
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: redis-cluster-monitor
+  namespace: social-commerce
+spec:
+  selector:
+    matchLabels:
+      app: social-commerce-redis
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-secret
+  namespace: social-commerce
+type: Opaque
+data:
+  REDIS_PASSWORD: cG9kcGRkb2RxZHE1MzQ1cXdlcnF3ZXI=  # Base64 encoded password
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: redis-cluster-hpa
+  namespace: social-commerce
+spec:
+  scaleTargetRef:
+    apiVersion: redis.redis.opstreelabs.in/v1beta1
+    kind: RedisCluster
+    name: social-commerce-redis
+  minReplicas: 6
+  maxReplicas: 12
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 75

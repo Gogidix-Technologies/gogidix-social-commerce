@@ -1,0 +1,143 @@
+name: Java CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop, staging]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [17]
+        # Consider adding more versions if needed: [11, 17]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Needed for proper versioning
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'temurin'  # Use Adoptium (formerly AdoptOpenJDK)
+          cache: 'maven'  # Caches Maven dependencies
+          
+      - name: Check code style
+        run: ./mvnw checkstyle:check
+        
+      - name: Build with Maven
+        run: ./mvnw clean package -DskipTests
+        
+      - name: Run tests with coverage
+        run: ./mvnw test jacoco:report
+        
+      - name: Check code coverage
+        run: |
+          COVERAGE=$(./mvnw jacoco:report | grep -A1 "Total.*instruction" | tail -n1 | awk -F'[:,%]' '{print $2}')
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "Code coverage is below 80% ($COVERAGE%)"
+            exit 1
+          else
+            echo "Code coverage is $COVERAGE%"
+          fi
+          
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: target/*.jar
+          
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+            
+  security:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      - name: Run OWASP Dependency Check
+        run: ./mvnw org.owasp:dependency-check-maven:check
+        
+      - name: Run SpotBugs
+        run: ./mvnw com.github.spotbugs:spotbugs-maven-plugin:spotbugs
+      
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            target/dependency-check-report.html
+            target/spotbugsXml.xml
+          
+  deploy-staging:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    needs: [build, security]
+    environment: staging
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: target/
+          
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment"
+          # Add your deployment commands here
+          # For example: ./mvnw spring-boot:deploy -Dspring-boot.deploy.url=https://staging-server
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+          
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [build, security]
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: target/
+          
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment"
+          # Add your deployment commands here
+          # For example: ./mvnw spring-boot:deploy -Dspring-boot.deploy.url=https://production-server
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }} 
