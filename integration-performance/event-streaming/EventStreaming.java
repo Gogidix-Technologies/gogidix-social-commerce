@@ -1,4 +1,4 @@
-package com.exalt.integration.streaming;
+package com.gogidix.integration.streaming;
 
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.KStream;

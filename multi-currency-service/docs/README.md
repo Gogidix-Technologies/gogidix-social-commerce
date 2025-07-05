@@ -264,7 +264,7 @@ multicurrency:
     
     alerts:
       enabled: true
-      email-recipients: ["finance@exalt.com", "risk@exalt.com"]
+      email-recipients: ["finance@gogidix.com", "risk@gogidix.com"]
       slack-webhook: ${SLACK_WEBHOOK_URL}
 
 eureka:
@@ -289,7 +289,7 @@ management:
 
 logging:
   level:
-    com.exalt.socialcommerce.multicurrency: DEBUG
+    com.gogidix.socialcommerce.multicurrency: DEBUG
     org.springframework.web: INFO
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId},%X{spanId}] %logger{36} - %msg%n"

@@ -1,0 +1,99 @@
+{
+  "app": {
+    "title": "Verkäufer Portal",
+    "subtitle": "Verwalten Sie Ihre Marktplatzpräsenz",
+    "version": "v1.0.0"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "products": "Produkte",
+    "orders": "Bestellungen",
+    "analytics": "Analytik",
+    "profile": "Profil",
+    "settings": "Einstellungen",
+    "logout": "Abmelden"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Willkommen zurück!",
+    "metrics": {
+      "totalSales": "Gesamtumsatz",
+      "totalOrders": "Gesamtbestellungen",
+      "conversionRate": "Konversionsrate",
+      "averageOrderValue": "Durchschnittlicher Bestellwert"
+    },
+    "charts": {
+      "salesTrend": "Verkaufstrend",
+      "topProducts": "Top-Produkte",
+      "recentOrders": "Neueste Bestellungen"
+    }
+  },
+  "products": {
+    "title": "Produkte",
+    "addProduct": "Produkt Hinzufügen",
+    "editProduct": "Produkt Bearbeiten",
+    "deleteProduct": "Produkt Löschen",
+    "productName": "Produktname",
+    "description": "Beschreibung",
+    "price": "Preis",
+    "category": "Kategorie",
+    "inventory": "Inventar",
+    "status": "Status",
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
+  },
+  "orders": {
+    "title": "Bestellungen",
+    "orderNumber": "Bestellnummer",
+    "customer": "Kunde",
+    "date": "Datum",
+    "amount": "Betrag",
+    "status": "Status",
+    "pending": "Ausstehend",
+    "processing": "Wird Bearbeitet",
+    "shipped": "Versandt",
+    "delivered": "Geliefert",
+    "cancelled": "Storniert"
+  },
+  "analytics": {
+    "title": "Analytik",
+    "revenue": "Umsatz",
+    "customers": "Kunden",
+    "traffic": "Traffic",
+    "performance": "Leistung",
+    "insights": "Einblicke"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "view": "Anzeigen",
+    "add": "Hinzufügen",
+    "update": "Aktualisieren",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "success": "Erfolgreich",
+    "warning": "Warnung",
+    "info": "Information"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "forgotPassword": "Passwort vergessen?",
+    "rememberMe": "Angemeldet bleiben",
+    "signUp": "Registrieren",
+    "welcomeBack": "Willkommen zurück!"
+  },
+  "errors": {
+    "general": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "network": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
+    "unauthorized": "Sie sind nicht berechtigt, diese Aktion auszuführen.",
+    "validation": "Bitte überprüfen Sie Ihre Eingabe und versuchen Sie es erneut.",
+    "notFound": "Die angeforderte Ressource wurde nicht gefunden."
+  }
+}

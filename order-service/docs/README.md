@@ -335,7 +335,7 @@ management:
 
 logging:
   level:
-    com.exalt.socialcommerce.order: DEBUG
+    com.gogidix.socialcommerce.order: DEBUG
     org.springframework.security: INFO
     org.hibernate: WARN
 ```

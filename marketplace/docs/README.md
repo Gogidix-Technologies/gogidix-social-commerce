@@ -211,7 +211,7 @@ marketplace:
       secret: ${JWT_SECRET}
       expiration: 86400000
     cors:
-      allowed-origins: ["http://localhost:3000", "https://marketplace.exalt.com"]
+      allowed-origins: ["http://localhost:3000", "https://marketplace.gogidix.com"]
 
 eureka:
   client:

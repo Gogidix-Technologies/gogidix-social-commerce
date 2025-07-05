@@ -312,7 +312,7 @@ integration:
       
     docker:
       enabled: true
-      registry: ${DOCKER_REGISTRY:exalt/social-commerce}
+      registry: ${DOCKER_REGISTRY:gogidix/social-commerce}
       
   monitoring-tools:
     newrelic:
@@ -327,7 +327,7 @@ integration:
 # Logging Configuration
 logging:
   level:
-    com.exalt.socialcommerce: INFO
+    com.gogidix.socialcommerce: INFO
     org.springframework.security: WARN
     org.springframework.web: WARN
     com.netflix.eureka: WARN

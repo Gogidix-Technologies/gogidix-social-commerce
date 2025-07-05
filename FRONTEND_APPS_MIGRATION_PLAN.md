@@ -7,19 +7,19 @@ During the social-commerce domain analysis, I discovered that **three critical f
 ## 📍 Current Situation
 
 ### Empty/Incorrect Destinations (Need Migration):
-1. **`/Exalt-Application-Limited/social-ecommerce-ecosystem/social-commerce/user-mobile-app/`**
+1. **`/Gogidix-Application-Limited/social-ecommerce-ecosystem/social-commerce/user-mobile-app/`**
    - ❌ **Current**: Only contains `Doc/` folder and incorrect `pom.xml` (Java Spring Boot)
    - ✅ **Should be**: React Native 0.71.7 + TypeScript mobile application
 
-2. **`/Exalt-Application-Limited/social-ecommerce-ecosystem/social-commerce/user-web-app/`**
+2. **`/Gogidix-Application-Limited/social-ecommerce-ecosystem/social-commerce/user-web-app/`**
    - ❌ **Current**: Only contains `Doc/` folder and incorrect `pom.xml` (Java Spring Boot)  
    - ✅ **Should be**: React 18.2.0 + TypeScript web application with complete API integration
 
-3. **`/Exalt-Application-Limited/social-ecommerce-ecosystem/social-commerce/vendor-app/`**
+3. **`/Gogidix-Application-Limited/social-ecommerce-ecosystem/social-commerce/vendor-app/`**
    - ❌ **Current**: Only contains `Doc/` folder and incorrect `pom.xml` (Java Spring Boot)
    - ✅ **Should be**: React Native vendor management application
 
-4. **`/Exalt-Application-Limited/social-ecommerce-ecosystem/social-commerce/social-media-integration/`**
+4. **`/Gogidix-Application-Limited/social-ecommerce-ecosystem/social-commerce/social-media-integration/`**
    - ❌ **Current**: Only contains `Doc/` folder
    - ✅ **Should be**: Node.js + Express backend service for social media integration
 
@@ -80,7 +80,7 @@ I have created **automated PowerShell scripts** to handle this migration properl
 ### Option 1: Migrate All Applications (Recommended)
 ```powershell
 # Navigate to the script location
-cd "C:\Users\frich\Desktop\Micro-Social-Ecommerce-Ecosystems\Exalt-Application-Limited\social-ecommerce-ecosystem\social-commerce"
+cd "C:\Users\frich\Desktop\Micro-Social-Ecommerce-Ecosystems\Gogidix-Application-Limited\social-ecommerce-ecosystem\social-commerce"
 
 # Execute master migration script
 .\copy-all-frontend-apps.ps1

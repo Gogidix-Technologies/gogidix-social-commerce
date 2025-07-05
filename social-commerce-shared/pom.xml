@@ -12,7 +12,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.exalt.socialcommerce</groupId>
+    <groupId>com.gogidix.socialcommerce</groupId>
     <artifactId>social-commerce-shared</artifactId>
     <version>1.0.0</version>
     <name>social-commerce-shared</name>

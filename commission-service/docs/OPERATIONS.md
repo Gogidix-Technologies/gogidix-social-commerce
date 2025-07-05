@@ -625,7 +625,7 @@ groups:
       </encoder>
     </appender>
     
-    <logger name="com.exalt.socialcommerce.commission" level="INFO"/>
+    <logger name="com.gogidix.socialcommerce.commission" level="INFO"/>
     <logger name="org.springframework.web" level="WARN"/>
     <logger name="org.hibernate" level="WARN"/>
     

@@ -1,4 +1,4 @@
-package com.exalt.socialcommerce.PACKAGE_NAME;
+package com.gogidix.socialcommerce.PACKAGE_NAME;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

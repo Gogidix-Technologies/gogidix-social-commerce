@@ -12,7 +12,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.exalt.ecosystem</groupId>
+    <groupId>com.gogidix.ecosystem</groupId>
     <artifactId>social-commerce</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
@@ -55,6 +55,7 @@
         <module>admin-finalization</module>
         <module>integration-optimization</module>
         <module>integration-performance</module>
+        <module>customer-support-service</module>
     </modules>
 
     <dependencyManagement>
@@ -79,42 +80,42 @@
 
             <!-- Shared Libraries -->
             <dependency>
-                <groupId>com.exalt.ecosystem.shared</groupId>
+                <groupId>com.gogidix.ecosystem.shared</groupId>
                 <artifactId>shared-model</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exalt.ecosystem.shared</groupId>
+                <groupId>com.gogidix.ecosystem.shared</groupId>
                 <artifactId>shared-utilities</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exalt.ecosystem.shared</groupId>
+                <groupId>com.gogidix.ecosystem.shared</groupId>
                 <artifactId>shared-exceptions</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exalt.ecosystem.shared</groupId>
+                <groupId>com.gogidix.ecosystem.shared</groupId>
                 <artifactId>shared-security</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exalt.ecosystem.shared</groupId>
+                <groupId>com.gogidix.ecosystem.shared</groupId>
                 <artifactId>shared-validation</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exalt.ecosystem.shared</groupId>
+                <groupId>com.gogidix.ecosystem.shared</groupId>
                 <artifactId>shared-audit</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exalt.ecosystem.shared</groupId>
+                <groupId>com.gogidix.ecosystem.shared</groupId>
                 <artifactId>shared-messaging</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exalt.ecosystem.shared</groupId>
+                <groupId>com.gogidix.ecosystem.shared</groupId>
                 <artifactId>shared-testing</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>

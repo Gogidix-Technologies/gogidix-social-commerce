@@ -1,0 +1,135 @@
+version: '3.8'
+
+services:
+  marketplace-website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: exalt-marketplace-website
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_BASE_URL=http://marketplace-api:8080/api/v1
+      - REACT_APP_MARKETPLACE_API_URL=http://marketplace:8081/api/v1
+      - REACT_APP_USER_SERVICE_URL=http://user-management:8082/api/v1
+      - REACT_APP_PRODUCT_SERVICE_URL=http://product-catalog:8083/api/v1
+      - REACT_APP_ORDER_SERVICE_URL=http://order-management:8084/api/v1
+      - REACT_APP_PAYMENT_SERVICE_URL=http://payment-processing:8085/api/v1
+      - REACT_APP_NOTIFICATION_SERVICE_URL=http://notification:8086/api/v1
+      - REACT_APP_WEBSOCKET_URL=ws://marketplace-api:8080/ws
+    networks:
+      - exalt-network
+    depends_on:
+      - marketplace-api
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  marketplace-api:
+    image: exalt/marketplace-service:latest
+    container_name: exalt-marketplace-api
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/marketplace_db
+      - SPRING_DATASOURCE_USERNAME=marketplace_user
+      - SPRING_DATASOURCE_PASSWORD=marketplace_pass
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - exalt-network
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: exalt-postgres
+    environment:
+      - POSTGRES_DB=marketplace_db
+      - POSTGRES_USER=marketplace_user
+      - POSTGRES_PASSWORD=marketplace_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - exalt-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketplace_user -d marketplace_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: exalt-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - exalt-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: exalt-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - exalt-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: exalt-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - exalt-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  exalt-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

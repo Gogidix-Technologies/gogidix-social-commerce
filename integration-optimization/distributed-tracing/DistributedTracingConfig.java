@@ -1,4 +1,4 @@
-package com.exalt.integration.tracing;
+package com.gogidix.integration.tracing;
 
 import brave.Tracing;
 import brave.Span;

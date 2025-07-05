@@ -79,7 +79,7 @@ The social-commerce domain has undergone mandatory comprehensive validation acro
 
 ### Week 1: Foundation Fixes
 1. Create domain-model Maven module
-2. Fix all groupIds to com.exalt.*
+2. Fix all groupIds to com.gogidix.*
 3. Generate missing Application classes
 4. Standardize configurations
 

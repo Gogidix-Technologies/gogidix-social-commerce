@@ -60,7 +60,7 @@ code --version
 ### 1. Clone Repository
 ```bash
 # Clone the repository
-git clone https://github.com/exalt/social-media-integration-service.git
+git clone https://github.com/gogidix/social-media-integration-service.git
 cd social-media-integration-service
 
 # Switch to development branch
@@ -616,5 +616,5 @@ module.exports = {
 - **Documentation**: `/docs/API.md`
 - **Architecture Guide**: `/docs/ARCHITECTURE.md`
 - **Operations Manual**: `/docs/OPERATIONS.md`
-- **Support Email**: social-media-team@exalt.com
+- **Support Email**: social-media-team@gogidix.com
 - **Slack Channel**: #social-media-integration

@@ -1,4 +1,4 @@
-package com.exalt.integration.eventdriven;
+package com.gogidix.integration.eventdriven;
 
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package com.exalt.integration.tests;
+package com.gogidix.integration.tests;
 
 import com.socialecommerceecosystem.shared.event.*;
 import com.socialecommerceecosystem.shared.config.KafkaConfig;

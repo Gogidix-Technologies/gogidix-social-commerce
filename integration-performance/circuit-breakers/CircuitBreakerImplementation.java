@@ -1,4 +1,4 @@
-package com.exalt.integration.circuitbreaker;
+package com.gogidix.integration.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;

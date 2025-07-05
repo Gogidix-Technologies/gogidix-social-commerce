@@ -74,7 +74,7 @@ I have created **6 PowerShell migration scripts** to resolve the critical issue 
 ### **Option 1: Migrate Everything (Recommended)**
 ```powershell
 # Navigate to script location
-cd "C:\Users\frich\Desktop\Micro-Social-Ecommerce-Ecosystems\Exalt-Application-Limited\social-ecommerce-ecosystem\social-commerce"
+cd "C:\Users\frich\Desktop\Micro-Social-Ecommerce-Ecosystems\Gogidix-Application-Limited\social-ecommerce-ecosystem\social-commerce"
 
 # Execute master migration script
 .\copy-all-frontend-apps.ps1

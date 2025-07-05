@@ -1,16 +1,16 @@
 # Package Cleanup and Compilation Testing Instructions
 
 ## Overview
-After the naming standardization to `com.exalt.ecosystem.socialcommerce`, we need to clean up old package directories and ensure all services compile properly.
+After the naming standardization to `com.gogidix.ecosystem.socialcommerce`, we need to clean up old package directories and ensure all services compile properly.
 
 ## Current Status Analysis
 
 ### ✅ Services with Correct Package Structure Only
-- **API Gateway**: `/src/main/java/com/exalt/ecosystem/socialcommerce/gateway/`
-- **Commission Service**: `/src/main/java/com/exalt/ecosystem/socialcommerce/commission/`
+- **API Gateway**: `/src/main/java/com/gogidix/ecosystem/socialcommerce/gateway/`
+- **Commission Service**: `/src/main/java/com/gogidix/ecosystem/socialcommerce/commission/`
 
 ### ⚠️ Services Requiring Cleanup
-- **Product Service**: Has both new (`com/exalt/ecosystem/socialcommerce/product/`) and old (`com/socialcommerce/product/`) structures
+- **Product Service**: Has both new (`com/gogidix/ecosystem/socialcommerce/product/`) and old (`com/socialcommerce/product/`) structures
 
 ## Cleanup Steps
 
@@ -24,7 +24,7 @@ Remove-Item -Path ".\product-service\src\main\java\com\socialcommerce" -Recurse 
 # Check for other old patterns in remaining services:
 # - com/socialecommerceecosystem/
 # - com/microecommerce/
-# - com/socialcommerce/ (if not part of the new exalt structure)
+# - com/socialcommerce/ (if not part of the new gogidix structure)
 ```
 
 ### Step 2: Services to Check and Clean

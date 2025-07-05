@@ -383,7 +383,7 @@ management:
 
 logging:
   level:
-    com.exalt.socialcommerce.payment: DEBUG
+    com.gogidix.socialcommerce.payment: DEBUG
     org.springframework.security: INFO
     com.stripe: DEBUG
   pattern:

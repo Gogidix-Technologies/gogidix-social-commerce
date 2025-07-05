@@ -1,4 +1,4 @@
-package com.exalt.integration.tracing;
+package com.gogidix.integration.tracing;
 
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.Span;

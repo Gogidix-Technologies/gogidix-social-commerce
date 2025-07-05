@@ -1,6 +1,6 @@
 # API Services Documentation
 
-This directory contains the API service layer for the User Web App, implementing Phase 2 API Integration with the standardized backend services using the com.exalt package structure.
+This directory contains the API service layer for the User Web App, implementing Phase 2 API Integration with the standardized backend services using the com.gogidix package structure.
 
 ## Architecture Overview
 

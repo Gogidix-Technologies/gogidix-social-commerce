@@ -63,7 +63,7 @@ JWT_EXPIRATION=86400
 
 # Logging Configuration
 LOGGING_LEVEL_ROOT=INFO
-LOGGING_LEVEL_COM_EXALT=DEBUG
+LOGGING_LEVEL_COM_GOGIDIX=DEBUG
 
 # Actuator Configuration
 MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus
@@ -253,7 +253,7 @@ management:
 logging:
   level:
     root: ${LOGGING_LEVEL_ROOT:INFO}
-    com.exalt.socialcommerce.commission: ${LOGGING_LEVEL_COM_EXALT:DEBUG}
+    com.gogidix.socialcommerce.commission: ${LOGGING_LEVEL_COM_GOGIDIX:DEBUG}
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
@@ -315,7 +315,7 @@ springdoc:
     version: 1.0.0
     contact:
       name: Development Team
-      email: dev@exalt.com
+      email: dev@gogidix.com
 ```
 
 ## Build and Run
@@ -580,7 +580,7 @@ mvn -version
 # Run with debug logging
 java -jar target/commission-service-1.0.0.jar \
   --logging.level.root=DEBUG \
-  --logging.level.com.exalt=TRACE
+  --logging.level.com.gogidix=TRACE
 ```
 
 #### 4. Port Conflicts

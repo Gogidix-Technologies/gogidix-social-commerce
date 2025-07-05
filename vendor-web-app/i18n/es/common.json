@@ -1,0 +1,99 @@
+{
+  "app": {
+    "title": "Portal de Vendedores",
+    "subtitle": "Gestiona tu presencia en el mercado",
+    "version": "v1.0.0"
+  },
+  "navigation": {
+    "dashboard": "Panel de Control",
+    "products": "Productos",
+    "orders": "Pedidos",
+    "analytics": "Analíticas",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "welcome": "¡Bienvenido de vuelta!",
+    "metrics": {
+      "totalSales": "Ventas Totales",
+      "totalOrders": "Pedidos Totales",
+      "conversionRate": "Tasa de Conversión",
+      "averageOrderValue": "Valor Promedio del Pedido"
+    },
+    "charts": {
+      "salesTrend": "Tendencia de Ventas",
+      "topProducts": "Productos Principales",
+      "recentOrders": "Pedidos Recientes"
+    }
+  },
+  "products": {
+    "title": "Productos",
+    "addProduct": "Agregar Producto",
+    "editProduct": "Editar Producto",
+    "deleteProduct": "Eliminar Producto",
+    "productName": "Nombre del Producto",
+    "description": "Descripción",
+    "price": "Precio",
+    "category": "Categoría",
+    "inventory": "Inventario",
+    "status": "Estado",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "orders": {
+    "title": "Pedidos",
+    "orderNumber": "Número de Pedido",
+    "customer": "Cliente",
+    "date": "Fecha",
+    "amount": "Cantidad",
+    "status": "Estado",
+    "pending": "Pendiente",
+    "processing": "Procesando",
+    "shipped": "Enviado",
+    "delivered": "Entregado",
+    "cancelled": "Cancelado"
+  },
+  "analytics": {
+    "title": "Analíticas",
+    "revenue": "Ingresos",
+    "customers": "Clientes",
+    "traffic": "Tráfico",
+    "performance": "Rendimiento",
+    "insights": "Perspectivas"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver",
+    "add": "Agregar",
+    "update": "Actualizar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "info": "Información"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "rememberMe": "Recordarme",
+    "signUp": "Registrarse",
+    "welcomeBack": "¡Bienvenido de vuelta!"
+  },
+  "errors": {
+    "general": "Ocurrió un error. Por favor, inténtalo de nuevo.",
+    "network": "Error de red. Por favor, verifica tu conexión.",
+    "unauthorized": "No estás autorizado para realizar esta acción.",
+    "validation": "Por favor, verifica tu entrada e inténtalo de nuevo.",
+    "notFound": "El recurso solicitado no fue encontrado."
+  }
+}

@@ -464,7 +464,7 @@ spec:
     spec:
       containers:
       - name: admin-finalization-service
-        image: exalt/admin-finalization-service:1.0.0
+        image: gogidix/admin-finalization-service:1.0.0
         ports:
         - containerPort: 8081
         env:

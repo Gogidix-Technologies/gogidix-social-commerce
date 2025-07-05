@@ -68,7 +68,7 @@ GRANT ALL PRIVILEGES ON DATABASE marketplace_db TO marketplace_user;
 #### Sample Data
 ```bash
 mvn flyway:migrate
-mvn exec:java -Dexec.mainClass="com.exalt.marketplace.util.DataLoader"
+mvn exec:java -Dexec.mainClass="com.gogidix.marketplace.util.DataLoader"
 ```
 
 ## Testing

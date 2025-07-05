@@ -45,7 +45,7 @@ cat > domain-model/pom.xml << EOF
     <modelVersion>4.0.0</modelVersion>
     
     <parent>
-        <groupId>com.exalt.ecosystem</groupId>
+        <groupId>com.gogidix.ecosystem</groupId>
         <artifactId>social-commerce</artifactId>
         <version>1.0.0</version>
     </parent>
@@ -60,8 +60,8 @@ EOF
 ```bash
 # Script to fix groupIds in all services
 for service in */pom.xml; do
-    sed -i "s/<groupId>org.springframework.boot</<groupId>com.exalt.ecosystem</" $service
-    sed -i "s/<groupId>com.socialcommerce</<groupId>com.exalt.ecosystem</" $service
+    sed -i "s/<groupId>org.springframework.boot</<groupId>com.gogidix.ecosystem</" $service
+    sed -i "s/<groupId>com.socialcommerce</<groupId>com.gogidix.ecosystem</" $service
 done
 ```
 
@@ -81,7 +81,7 @@ Services needing Application class:
 
 Template for Application class generation:
 ```java
-package com.exalt.ecosystem.[service];
+package com.gogidix.ecosystem.[service];
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -104,7 +104,7 @@ public class [ServiceName]Application {
 
 #### Basic Service Structure Template:
 ```
-src/main/java/com/exalt/ecosystem/[service]/
+src/main/java/com/gogidix/ecosystem/[service]/
 ├── controller/
 │   └── [Service]Controller.java
 ├── service/
@@ -146,7 +146,7 @@ Generate placeholder tests for all services without tests:
 # Script to generate basic test structure
 for service in */; do
     if [ -d "$service/src/main/java" ] && [ ! -d "$service/src/test/java" ]; then
-        mkdir -p "$service/src/test/java/com/exalt/ecosystem/${service%/}"
+        mkdir -p "$service/src/test/java/com/gogidix/ecosystem/${service%/}"
         # Generate ApplicationTest.java
     fi
 done
@@ -194,7 +194,7 @@ done
 ## Success Metrics
 
 ### After Fixes:
-- [ ] 100% services have correct groupId (com.exalt.*)
+- [ ] 100% services have correct groupId (com.gogidix.*)
 - [ ] 100% services have Application classes
 - [ ] 100% services have application configuration
 - [ ] 100% services compile successfully

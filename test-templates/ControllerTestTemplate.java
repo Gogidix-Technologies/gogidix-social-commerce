@@ -1,6 +1,6 @@
-package com.exalt.socialcommerce.${SERVICE}.controller;
+package com.gogidix.socialcommerce.${SERVICE}.controller;
 
-import com.exalt.socialcommerce.${SERVICE}.service.${SERVICE_CLASS}Service;
+import com.gogidix.socialcommerce.${SERVICE}.service.${SERVICE_CLASS}Service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

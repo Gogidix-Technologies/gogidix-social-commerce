@@ -1,6 +1,6 @@
-package com.exalt.socialcommerce.${SERVICE}.repository;
+package com.gogidix.socialcommerce.${SERVICE}.repository;
 
-import com.exalt.socialcommerce.${SERVICE}.entity.${SERVICE_CLASS};
+import com.gogidix.socialcommerce.${SERVICE}.entity.${SERVICE_CLASS};
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

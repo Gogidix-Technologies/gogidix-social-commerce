@@ -260,7 +260,7 @@ management:
 
 logging:
   level:
-    com.exalt.socialcommerce.marketplace: INFO
+    com.gogidix.socialcommerce.marketplace: INFO
     org.springframework.cloud.netflix.eureka: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
@@ -288,7 +288,7 @@ spring:
 
 logging:
   level:
-    com.exalt.socialcommerce.marketplace: DEBUG
+    com.gogidix.socialcommerce.marketplace: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 ```
@@ -319,7 +319,7 @@ eureka:
 
 logging:
   level:
-    com.exalt.socialcommerce.marketplace: WARN
+    com.gogidix.socialcommerce.marketplace: WARN
     org.springframework.cloud.netflix.eureka: INFO
 ```
 
@@ -428,7 +428,7 @@ keytool -genkeypair -alias marketplace-service \
         -storetype PKCS12 \
         -keystore marketplace-keystore.p12 \
         -validity 365 \
-        -dname "CN=localhost, OU=Development, O=Exalt, L=Dublin, ST=Leinster, C=IE"
+        -dname "CN=localhost, OU=Development, O=Gogidix, L=Dublin, ST=Leinster, C=IE"
 
 # Move to resources directory
 mv marketplace-keystore.p12 src/main/resources/
@@ -789,7 +789,7 @@ mvn spring-boot:run
 # application-debug.yml
 logging:
   level:
-    com.exalt.socialcommerce.marketplace: DEBUG
+    com.gogidix.socialcommerce.marketplace: DEBUG
     org.springframework: DEBUG
     org.hibernate: DEBUG
 ```

@@ -1,4 +1,4 @@
-package com.exalt.ecosystem.socialcommerce.analytics.currency;
+package com.gogidix.ecosystem.socialcommerce.analytics.currency;
 
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;

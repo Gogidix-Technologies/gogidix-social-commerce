@@ -532,7 +532,7 @@ data:
       </appender>
       
       <!-- Application loggers -->
-      <logger name="com.exalt.socialcommerce.marketplace" level="INFO"/>
+      <logger name="com.gogidix.socialcommerce.marketplace" level="INFO"/>
       <logger name="org.springframework.security" level="WARN"/>
       <logger name="org.hibernate.SQL" level="WARN"/>
       

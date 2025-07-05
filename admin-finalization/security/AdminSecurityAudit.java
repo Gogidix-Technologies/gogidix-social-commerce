@@ -1,4 +1,4 @@
-package com.exalt.admin.security;
+package com.gogidix.admin.security;
 
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;

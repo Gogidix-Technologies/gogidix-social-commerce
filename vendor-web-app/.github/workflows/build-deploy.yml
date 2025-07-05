@@ -1,0 +1,116 @@
+name: Build and Deploy Vendor Web App
+
+on:
+  push:
+    branches: [ dev, staging, main ]
+    paths:
+      - 'social-commerce/vendor-web-app/**'
+  pull_request:
+    branches: [ dev, staging, main ]
+    paths:
+      - 'social-commerce/vendor-web-app/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: social-commerce/vendor-web-app/package.json
+    
+    - name: Install dependencies
+      working-directory: social-commerce/vendor-web-app
+      run: |
+        npm install
+        
+    - name: Run tests
+      working-directory: social-commerce/vendor-web-app
+      run: |
+        npm run test -- --coverage --watchAll=false
+        
+    - name: Build React app
+      working-directory: social-commerce/vendor-web-app
+      env:
+        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || 'https://api-dev.exalt-ecosystem.com' }}
+        REACT_APP_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || github.ref == 'refs/heads/staging' && 'staging' || 'development' }}
+      run: |
+        npm run build
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: vendor-web-app-build
+        path: social-commerce/vendor-web-app/build/
+        retention-days: 30
+        
+  deploy-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    environment: development
+    
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: vendor-web-app-build
+        path: build/
+        
+    - name: Deploy to Development S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: us-east-1
+      run: |
+        aws s3 sync build/ s3://exalt-dev-vendor-web-app/ --delete
+        aws cloudfront create-invalidation --distribution-id ${{ secrets.DEV_VENDOR_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+        
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    environment: staging
+    
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: vendor-web-app-build
+        path: build/
+        
+    - name: Deploy to Staging S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: us-east-1
+      run: |
+        aws s3 sync build/ s3://exalt-staging-vendor-web-app/ --delete
+        aws cloudfront create-invalidation --distribution-id ${{ secrets.STAGING_VENDOR_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+        
+  deploy-production:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: vendor-web-app-build
+        path: build/
+        
+    - name: Deploy to Production S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: us-east-1
+      run: |
+        aws s3 sync build/ s3://exalt-prod-vendor-web-app/ --delete
+        aws cloudfront create-invalidation --distribution-id ${{ secrets.PROD_VENDOR_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"

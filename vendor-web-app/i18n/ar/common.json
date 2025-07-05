@@ -1,0 +1,99 @@
+{
+  "app": {
+    "title": "بوابة البائع",
+    "subtitle": "إدارة حضورك في السوق",
+    "version": "v1.0.0"
+  },
+  "navigation": {
+    "dashboard": "لوحة التحكم",
+    "products": "المنتجات",
+    "orders": "الطلبات",
+    "analytics": "التحليلات",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "welcome": "أهلاً بعودتك!",
+    "metrics": {
+      "totalSales": "إجمالي المبيعات",
+      "totalOrders": "إجمالي الطلبات",
+      "conversionRate": "معدل التحويل",
+      "averageOrderValue": "متوسط قيمة الطلب"
+    },
+    "charts": {
+      "salesTrend": "اتجاه المبيعات",
+      "topProducts": "أفضل المنتجات",
+      "recentOrders": "الطلبات الأخيرة"
+    }
+  },
+  "products": {
+    "title": "المنتجات",
+    "addProduct": "إضافة منتج",
+    "editProduct": "تعديل المنتج",
+    "deleteProduct": "حذف المنتج",
+    "productName": "اسم المنتج",
+    "description": "الوصف",
+    "price": "السعر",
+    "category": "الفئة",
+    "inventory": "المخزون",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط"
+  },
+  "orders": {
+    "title": "الطلبات",
+    "orderNumber": "رقم الطلب",
+    "customer": "العميل",
+    "date": "التاريخ",
+    "amount": "المبلغ",
+    "status": "الحالة",
+    "pending": "في الانتظار",
+    "processing": "قيد المعالجة",
+    "shipped": "تم الشحن",
+    "delivered": "تم التسليم",
+    "cancelled": "ملغي"
+  },
+  "analytics": {
+    "title": "التحليلات",
+    "revenue": "الإيرادات",
+    "customers": "العملاء",
+    "traffic": "الحركة",
+    "performance": "الأداء",
+    "insights": "الرؤى"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "add": "إضافة",
+    "update": "تحديث",
+    "search": "بحث",
+    "filter": "تصفية",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "warning": "تحذير",
+    "info": "معلومة"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "rememberMe": "تذكرني",
+    "signUp": "إنشاء حساب",
+    "welcomeBack": "أهلاً بعودتك!"
+  },
+  "errors": {
+    "general": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    "network": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
+    "unauthorized": "غير مخول لك بتنفيذ هذا الإجراء.",
+    "validation": "يرجى التحقق من إدخالك والمحاولة مرة أخرى.",
+    "notFound": "لم يتم العثور على المورد المطلوب."
+  }
+}

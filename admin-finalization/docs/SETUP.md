@@ -63,7 +63,7 @@ docker-compose --version
 ### 1. Clone Repository
 ```bash
 # Clone the main repository
-git clone https://github.com/exalt/social-ecommerce-ecosystem.git
+git clone https://github.com/gogidix/social-ecommerce-ecosystem.git
 cd social-ecommerce-ecosystem/social-commerce/admin-finalization
 
 # Switch to development branch
@@ -203,7 +203,7 @@ management:
 # Logging Configuration
 logging:
   level:
-    com.exalt.adminfinalization: DEBUG
+    com.gogidix.adminfinalization: DEBUG
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
   pattern:
@@ -330,7 +330,7 @@ INSERT INTO admin_workflows (
     'HIGH',
     'VENDOR_ONBOARDING',
     '{"vendorId": "V123", "businessType": "RETAIL", "documents": ["license.pdf", "tax_cert.pdf"]}',
-    'admin@exalt.com',
+    'admin@gogidix.com',
     NOW()
 ),
 (
@@ -341,7 +341,7 @@ INSERT INTO admin_workflows (
     'MEDIUM',
     'PRODUCT_APPROVAL',
     '{"productId": "P456", "category": "ELECTRONICS", "price": 299.99}',
-    'moderator@exalt.com',
+    'moderator@gogidix.com',
     NOW() - INTERVAL '2 hours'
 );
 ```
@@ -414,7 +414,7 @@ sudo rabbitmqctl set_permissions -p / admin ".*" ".*" ".*"
 3. **Configure Run Configuration**
    ```
    Run -> Edit Configurations -> Add New -> Spring Boot
-   Main class: com.exalt.adminfinalization.AdminFinalizationApplication
+   Main class: com.gogidix.adminfinalization.AdminFinalizationApplication
    VM options: -Dspring.profiles.active=local
    Environment variables: Add any required variables
    ```
@@ -450,7 +450,7 @@ sudo rabbitmqctl set_permissions -p / admin ".*" ".*" ".*"
       "type": "java",
       "name": "Admin Finalization Service",
       "request": "launch",
-      "mainClass": "com.exalt.adminfinalization.AdminFinalizationApplication",
+      "mainClass": "com.gogidix.adminfinalization.AdminFinalizationApplication",
       "projectName": "admin-finalization-service",
       "args": "--spring.profiles.active=local",
       "vmArgs": "-Dserver.port=8081"
@@ -728,5 +728,5 @@ spring:
 - **Documentation**: `/docs/README.md`, `/docs/API.md`
 - **Architecture Guide**: `/docs/ARCHITECTURE.md`
 - **Operations Manual**: `/docs/OPERATIONS.md`
-- **Support Email**: admin-finalization-team@exalt.com
+- **Support Email**: admin-finalization-team@gogidix.com
 - **Slack Channel**: #admin-finalization-service

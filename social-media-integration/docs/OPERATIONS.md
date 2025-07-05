@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: social-media-integration
-        image: exalt/social-media-integration:1.0.0
+        image: gogidix/social-media-integration:1.0.0
         ports:
         - containerPort: 3004
         env:
@@ -701,7 +701,7 @@ echo "Backup completed at $(date)" >> $LOG_FILE
 find /backups -name "social-media-*.tar.gz" -mtime +7 -delete
 
 # Upload to cloud storage
-aws s3 cp "/backups/social-media-$DATE.tar.gz" "s3://exalt-backups/social-media/"
+aws s3 cp "/backups/social-media-$DATE.tar.gz" "s3://gogidix-backups/social-media/"
 ```
 
 ### Recovery Procedures
@@ -783,7 +783,7 @@ npm run report:weekly
 
 # Security updates
 npm audit fix
-docker pull exalt/social-media-integration:latest
+docker pull gogidix/social-media-integration:latest
 
 # Performance analysis
 npm run analyze:performance
@@ -903,9 +903,9 @@ const handleRateLimit = async (platform, error) => {
 ### Emergency Contacts
 
 - **Primary On-Call**: +1-555-SOCIAL (24/7)
-- **Technical Lead**: social-lead@exalt.com
-- **DevOps Team**: devops@exalt.com
-- **Security Team**: security@exalt.com
+- **Technical Lead**: social-lead@gogidix.com
+- **DevOps Team**: devops@gogidix.com
+- **Security Team**: security@gogidix.com
 
 ### Escalation Procedures
 

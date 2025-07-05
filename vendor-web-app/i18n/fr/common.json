@@ -1,0 +1,99 @@
+{
+  "app": {
+    "title": "Portail Vendeur",
+    "subtitle": "Gérez votre présence sur le marché",
+    "version": "v1.0.0"
+  },
+  "navigation": {
+    "dashboard": "Tableau de Bord",
+    "products": "Produits",
+    "orders": "Commandes",
+    "analytics": "Analytiques",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "logout": "Déconnexion"
+  },
+  "dashboard": {
+    "title": "Tableau de Bord",
+    "welcome": "Bon retour !",
+    "metrics": {
+      "totalSales": "Ventes Totales",
+      "totalOrders": "Commandes Totales",
+      "conversionRate": "Taux de Conversion",
+      "averageOrderValue": "Valeur Moyenne de Commande"
+    },
+    "charts": {
+      "salesTrend": "Tendance des Ventes",
+      "topProducts": "Produits Principaux",
+      "recentOrders": "Commandes Récentes"
+    }
+  },
+  "products": {
+    "title": "Produits",
+    "addProduct": "Ajouter Produit",
+    "editProduct": "Modifier Produit",
+    "deleteProduct": "Supprimer Produit",
+    "productName": "Nom du Produit",
+    "description": "Description",
+    "price": "Prix",
+    "category": "Catégorie",
+    "inventory": "Inventaire",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif"
+  },
+  "orders": {
+    "title": "Commandes",
+    "orderNumber": "Numéro de Commande",
+    "customer": "Client",
+    "date": "Date",
+    "amount": "Montant",
+    "status": "Statut",
+    "pending": "En Attente",
+    "processing": "En Traitement",
+    "shipped": "Expédié",
+    "delivered": "Livré",
+    "cancelled": "Annulé"
+  },
+  "analytics": {
+    "title": "Analytiques",
+    "revenue": "Revenus",
+    "customers": "Clients",
+    "traffic": "Trafic",
+    "performance": "Performance",
+    "insights": "Aperçus"
+  },
+  "common": {
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "add": "Ajouter",
+    "update": "Mettre à Jour",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Avertissement",
+    "info": "Information"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "email": "E-mail",
+    "password": "Mot de Passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "rememberMe": "Se souvenir de moi",
+    "signUp": "S'inscrire",
+    "welcomeBack": "Bon retour !"
+  },
+  "errors": {
+    "general": "Une erreur s'est produite. Veuillez réessayer.",
+    "network": "Erreur réseau. Veuillez vérifier votre connexion.",
+    "unauthorized": "Vous n'êtes pas autorisé à effectuer cette action.",
+    "validation": "Veuillez vérifier votre saisie et réessayer.",
+    "notFound": "La ressource demandée n'a pas été trouvée."
+  }
+}

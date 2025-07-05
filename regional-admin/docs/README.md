@@ -260,7 +260,7 @@ integration:
 # Logging Configuration
 logging:
   level:
-    com.exalt.socialcommerce: ${LOG_LEVEL:INFO}
+    com.gogidix.socialcommerce: ${LOG_LEVEL:INFO}
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
   pattern:

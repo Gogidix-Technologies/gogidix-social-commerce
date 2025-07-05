@@ -287,4 +287,4 @@ spec:
 
 ## License
 
-Proprietary - Exalt Application Limited
+Proprietary - Gogidix Application Limited
