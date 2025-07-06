@@ -37,7 +37,7 @@ jobs:
     - name: Build React app
       working-directory: social-commerce/global-hq-admin
       env:
-        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || 'https://api-dev.exalt-ecosystem.com' }}
+        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || 'https://api-dev.gogidix-ecosystem.com' }}
         REACT_APP_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || github.ref == 'refs/heads/staging' && 'staging' || 'development' }}
       run: |
         npm run build

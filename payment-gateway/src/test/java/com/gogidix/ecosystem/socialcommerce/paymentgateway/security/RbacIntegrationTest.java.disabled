@@ -1,8 +1,8 @@
-package com.exalt.ecosystem.socialcommerce.paymentgateway.security;
+package com.gogidix.socialcommerce.paymentgateway.security;
 
-import com.exalt.ecosystem.socialcommerce.paymentgateway.dto.PaymentRequest;
-import com.exalt.ecosystem.socialcommerce.paymentgateway.dto.PayoutRequest;
-import com.exalt.ecosystem.socialcommerce.paymentgateway.service.PaymentGatewayFactory;
+import com.gogidix.socialcommerce.paymentgateway.dto.PaymentRequest;
+import com.gogidix.socialcommerce.paymentgateway.dto.PayoutRequest;
+import com.gogidix.socialcommerce.paymentgateway.service.PaymentGatewayFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

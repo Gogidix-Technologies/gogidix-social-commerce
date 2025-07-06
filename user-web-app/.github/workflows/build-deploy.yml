@@ -37,7 +37,7 @@ jobs:
     - name: Build React app
       working-directory: social-commerce/user-web-app
       env:
-        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || 'https://api-dev.exalt-ecosystem.com' }}
+        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || 'https://api-dev.gogidix-ecosystem.com' }}
         REACT_APP_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || github.ref == 'refs/heads/staging' && 'staging' || 'development' }}
       run: |
         npm run build
@@ -68,7 +68,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: us-east-1
       run: |
-        aws s3 sync build/ s3://exalt-dev-user-web-app/ --delete
+        aws s3 sync build/ s3://gogidix-dev-user-web-app/ --delete
         aws cloudfront create-invalidation --distribution-id ${{ secrets.DEV_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
         
   deploy-staging:
@@ -90,7 +90,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: us-east-1
       run: |
-        aws s3 sync build/ s3://exalt-staging-user-web-app/ --delete
+        aws s3 sync build/ s3://gogidix-staging-user-web-app/ --delete
         aws cloudfront create-invalidation --distribution-id ${{ secrets.STAGING_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
         
   deploy-production:
@@ -112,5 +112,5 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: us-east-1
       run: |
-        aws s3 sync build/ s3://exalt-prod-user-web-app/ --delete
+        aws s3 sync build/ s3://gogidix-prod-user-web-app/ --delete
         aws cloudfront create-invalidation --distribution-id ${{ secrets.PROD_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"

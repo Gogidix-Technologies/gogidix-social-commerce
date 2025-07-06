@@ -41,7 +41,7 @@ management:
 
 logging:
   level:
-    com.exalt: INFO
+    com.gogidix.socialcommerce: INFO
     org.springframework: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %level - %msg%n"

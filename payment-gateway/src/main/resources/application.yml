@@ -86,8 +86,8 @@ info:
 # Logging Configuration - SECURITY HARDENED
 logging:
   level:
-    com.exalt.ecosystem.socialcommerce.paymentgateway: INFO
-    com.exalt.ecosystem.socialcommerce.paymentgateway.security: WARN
+    com.gogidix.socialcommerce.paymentgateway: INFO
+    com.gogidix.socialcommerce.paymentgateway.security: WARN
     org.springframework.cloud: WARN
     org.springframework.security: WARN
     io.github.resilience4j: INFO

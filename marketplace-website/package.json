@@ -1,7 +1,7 @@
 {
-  "name": "@exalt/marketplace-website",
+  "name": "@gogidix/marketplace-website",
   "version": "1.0.0",
-  "description": "Exalt Social Commerce Marketplace - Customer facing web application",
+  "description": "Gogidix Social Commerce Marketplace - Customer facing web application",
   "private": true,
   "scripts": {
     "start": "react-scripts start",
@@ -17,8 +17,8 @@
     "analyze": "source-map-explorer 'build/static/js/*.js'",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
-    "docker:build": "docker build -t exalt-marketplace-website .",
-    "docker:run": "docker run -p 3000:80 exalt-marketplace-website"
+    "docker:build": "docker build -t gogidix-marketplace-website .",
+    "docker:run": "docker run -p 3000:80 gogidix-marketplace-website"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
